@@ -1,6 +1,12 @@
-// Placeholder for Employee type definitions
 export interface Employee {
-  id: string;
+  id: string; // uuid
+  employee_id: string;
   name: string;
-  // Add other employee fields
+  email: string;
+  designation?: string;
+  dob?: string; // ISO date string
+  created_at: string;
+  updated_at: string;
 }
+
+export type CreateEmployeeDTO = Omit<Employee, 'id' | 'created_at' | 'updated_at'>;
