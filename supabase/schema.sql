@@ -78,3 +78,7 @@ CREATE TABLE public.activity_logs (
 CREATE INDEX idx_activity_logs_action ON public.activity_logs(action);
 CREATE INDEX idx_activity_logs_created_at ON public.activity_logs(created_at);
 CREATE INDEX idx_activity_logs_metadata ON public.activity_logs USING GIN (metadata);
+
+-- Alter Employees Table to add missing fields for Employee Management
+ALTER TABLE public.employees 
+ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active';

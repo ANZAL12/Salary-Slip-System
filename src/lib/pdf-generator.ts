@@ -40,7 +40,6 @@ export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob>
       borderColor: color,
       borderWidth: 2,
       borderLineCap: 1, // Round
-      borderLineJoin: 1, // Round
     });
   };
 

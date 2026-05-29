@@ -6,6 +6,14 @@ export const employeeSchema = z.object({
   email: z.string().email("Invalid email format"),
   designation: z.string().min(1, "Designation is required"),
   dob: z.string().min(1, "Date of Birth is required"),
+  status: z.enum(['Active', 'Inactive', 'On Leave'])
 });
 
 export type EmployeeData = z.infer<typeof employeeSchema>;
+
+// Extended type for DB responses
+export type EmployeeRecord = EmployeeData & {
+  id: string;
+  created_at: string;
+  updated_at: string;
+};

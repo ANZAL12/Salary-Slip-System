@@ -119,7 +119,8 @@ export default function UploadEmployeesPage() {
         name: e.name,
         email: e.email,
         designation: e.designation,
-        dob: e.dob
+        dob: e.dob,
+        status: 'Active'
       }));
 
     if (validEmployees.length === 0) {

@@ -20,3 +20,19 @@ export const salarySchema = z.object({
 });
 
 export type RawSalaryData = z.infer<typeof salarySchema>;
+
+export type SalaryRecordDB = {
+  id: string;
+  employee_id: string;
+  month: number;
+  year: number;
+  base_salary: number;
+  hra: number;
+  allowances: number;
+  deductions: number;
+  net_salary: number;
+  created_at: string;
+  employees: {
+    employee_id: string;
+  };
+};

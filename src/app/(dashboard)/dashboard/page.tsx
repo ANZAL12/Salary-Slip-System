@@ -1,25 +1,78 @@
 'use client';
 
-import { Users, FileText, Send, Clock, ArrowRight, UploadCloud } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Users, FileText, Send, Clock, ArrowRight, UploadCloud, Info, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import Image from 'next/image';
 import { SiToyota } from 'react-icons/si';
+import { getDashboardMetrics, DashboardMetrics } from '@/services/dashboard.service';
 
-const payrollData = [
-  { name: 'Basic Salary', value: 7840000, color: '#EB0A1E' },
-  { name: 'HRA', value: 1860000, color: '#3B82F6' },
-  { name: 'Allowances', value: 1620000, color: '#10B981' },
-  { name: 'Deductions', value: 1220000, color: '#F59E0B' },
-  { name: 'Others', value: 240000, color: '#8B5CF6' },
-];
-
-const emailData = [
-  { name: 'Sent Successfully', value: 240, color: '#10B981' },
-  { name: 'Pending', value: 8, color: '#F59E0B' },
-  { name: 'Failed', value: 0, color: '#EB0A1E' },
+const monthNames = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
 export default function DashboardPage() {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      const result = await getDashboardMetrics();
+      if (result.success && result.data) {
+        setMetrics(result.data);
+      }
+      setIsLoading(false);
+    }
+    loadData();
+  }, []);
+
+  if (isLoading || !metrics) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="h-32 bg-gray-100 rounded-xl"></div>
+          <div className="h-32 bg-gray-100 rounded-xl"></div>
+          <div className="h-32 bg-gray-100 rounded-xl"></div>
+          <div className="h-32 bg-gray-100 rounded-xl"></div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="h-80 bg-gray-100 rounded-xl"></div>
+          <div className="h-80 bg-gray-100 rounded-xl"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    totalEmployees,
+    salaryRecordsCurrentMonth,
+    salaryRecordsTotal,
+    emailsSent,
+    emailsPending,
+    emailsFailed,
+    payrollOverview,
+    recentUploads,
+    recentActivities
+  } = metrics;
+
+  const totalEmails = emailsSent + emailsPending + emailsFailed;
+  const emailSuccessRate = totalEmails > 0 ? ((emailsSent / totalEmails) * 100).toFixed(1) : '0';
+
+  const payrollData = [
+    { name: 'Basic Salary', value: payrollOverview.baseSalary, color: '#EB0A1E' },
+    { name: 'HRA', value: payrollOverview.hra, color: '#3B82F6' },
+    { name: 'Allowances', value: payrollOverview.allowances, color: '#10B981' },
+    { name: 'Deductions', value: payrollOverview.deductions, color: '#F59E0B' },
+  ].filter(d => d.value > 0);
+
+  const emailData = [
+    { name: 'Sent Successfully', value: emailsSent, color: '#10B981' },
+    { name: 'Pending', value: emailsPending, color: '#F59E0B' },
+    { name: 'Failed', value: emailsFailed, color: '#EB0A1E' },
+  ].filter(d => d.value > 0);
+
+  const currentMonthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+
   return (
     <div className="space-y-6">
       
@@ -33,11 +86,11 @@ export default function DashboardPage() {
             </div>
             <div className="text-right">
               <p className="text-sm font-medium text-gray-500">Total Employees</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">248</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{totalEmployees}</p>
             </div>
           </div>
           <p className="mt-4 text-sm font-medium text-green-600">
-            <span className="mr-1">↑</span>12 <span className="text-gray-400 font-normal">from last month</span>
+            Active in system
           </p>
         </div>
 
@@ -48,12 +101,12 @@ export default function DashboardPage() {
               <FileText className="w-7 h-7 text-blue-600" />
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-500">Salary Records (May 2026)</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">248</p>
+              <p className="text-sm font-medium text-gray-500">Salary Records ({currentMonthName})</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{salaryRecordsCurrentMonth}</p>
             </div>
           </div>
-          <p className="mt-4 text-sm font-medium text-green-600">
-            100% <span className="text-gray-400 font-normal">records uploaded</span>
+          <p className="mt-4 text-sm font-medium text-gray-500">
+            {salaryRecordsTotal} <span className="font-normal text-gray-400">total records ever</span>
           </p>
         </div>
 
@@ -65,11 +118,11 @@ export default function DashboardPage() {
             </div>
             <div className="text-right">
               <p className="text-sm font-medium text-gray-500">Emails Sent</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">240</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{emailsSent}</p>
             </div>
           </div>
           <p className="mt-4 text-sm font-medium text-green-600">
-            96.77% <span className="text-gray-400 font-normal">success rate</span>
+            {emailSuccessRate}% <span className="text-gray-400 font-normal">success rate</span>
           </p>
         </div>
 
@@ -81,11 +134,11 @@ export default function DashboardPage() {
             </div>
             <div className="text-right">
               <p className="text-sm font-medium text-gray-500">Pending Emails</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">8</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{emailsPending}</p>
             </div>
           </div>
           <p className="mt-4 text-sm font-medium text-orange-500">
-            Needs attention
+            {emailsFailed} <span className="text-gray-400 font-normal">failed emails</span>
           </p>
         </div>
       </div>
@@ -124,18 +177,21 @@ export default function DashboardPage() {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-xs text-gray-500 font-medium">Total Payroll</span>
-                <span className="text-lg font-bold text-gray-900">₹ 1,24,80,000</span>
+                <span className="text-lg font-bold text-gray-900">
+                  ₹ {(payrollOverview.totalPayroll / 100000).toFixed(2).replace(/\.00$/, '')}L
+                </span>
               </div>
             </div>
             <div className="w-1/2 pl-6 space-y-4">
+              {payrollData.length === 0 && <p className="text-sm text-gray-400">No data available</p>}
               {payrollData.map((item) => (
                 <div key={item.name} className="flex items-start">
                   <div className="w-3 h-3 rounded-full mt-1.5 mr-3 flex-shrink-0" style={{ backgroundColor: item.color }} />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{item.name}</p>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      ₹ {(item.value / 100000).toFixed(2).replace(/\.00$/, '')},00,000 
-                      <span className="ml-1">({((item.value / 12480000) * 100).toFixed(1)}%)</span>
+                      ₹ {(item.value / 100000).toFixed(2).replace(/\.00$/, '')}L 
+                      <span className="ml-1">({((item.value / payrollOverview.totalPayroll) * 100).toFixed(1)}%)</span>
                     </p>
                   </div>
                 </div>
@@ -175,17 +231,18 @@ export default function DashboardPage() {
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-xs text-gray-500 font-medium">Total</span>
-                <span className="text-2xl font-bold text-gray-900">248</span>
+                <span className="text-2xl font-bold text-gray-900">{totalEmails}</span>
               </div>
             </div>
             <div className="w-1/2 pl-6 space-y-5">
+              {emailData.length === 0 && <p className="text-sm text-gray-400">No data available</p>}
               {emailData.map((item) => (
                 <div key={item.name} className="flex items-start">
                   <div className="w-3 h-3 rounded-full mt-1 mr-3 flex-shrink-0" style={{ backgroundColor: item.color }} />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{item.name}</p>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {item.value} <span className="ml-1">({((item.value / 248) * 100).toFixed(2)}%)</span>
+                      {item.value} <span className="ml-1">({((item.value / totalEmails) * 100).toFixed(1)}%)</span>
                     </p>
                   </div>
                 </div>
@@ -218,20 +275,21 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {[
-                  { name: 'Salary_May_2026.xlsx', m: 'May 2026', r: 248, by: 'Admin User', at: '28 May 2026, 10:30 AM' },
-                  { name: 'Salary_Apr_2026.xlsx', m: 'Apr 2026', r: 245, by: 'Admin User', at: '30 Apr 2026, 11:15 AM' },
-                  { name: 'Salary_Mar_2026.xlsx', m: 'Mar 2026', r: 240, by: 'Admin User', at: '29 Mar 2026, 09:45 AM' }
-                ].map((row, i) => (
+                {recentUploads.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">No recent uploads found.</td>
+                  </tr>
+                )}
+                {recentUploads.map((row, i) => (
                   <tr key={i} className="border-b border-gray-50 hover:bg-gray-50/50">
                     <td className="px-4 py-4 font-medium text-green-700 flex items-center">
                       <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 text-[10px] mr-2 font-bold uppercase tracking-wider">XLS</span>
-                      {row.name}
+                      Payroll_{monthNames[row.month-1]}_{row.year}.xlsx
                     </td>
-                    <td className="px-4 py-4 text-gray-700">{row.m}</td>
-                    <td className="px-4 py-4 text-gray-700">{row.r}</td>
-                    <td className="px-4 py-4 text-gray-700">{row.by}</td>
-                    <td className="px-4 py-4 text-gray-500">{row.at}</td>
+                    <td className="px-4 py-4 text-gray-700">{monthNames[row.month-1]} {row.year}</td>
+                    <td className="px-4 py-4 text-gray-700">{row.recordCount}</td>
+                    <td className="px-4 py-4 text-gray-700">Admin</td>
+                    <td className="px-4 py-4 text-gray-500">{new Date(row.uploadedAt).toLocaleDateString()}</td>
                     <td className="px-4 py-4">
                       <span className="px-2.5 py-1 text-xs font-medium bg-green-50 text-green-600 rounded-md border border-green-100">Processed</span>
                     </td>
@@ -254,25 +312,35 @@ export default function DashboardPage() {
             <span className="text-sm font-bold text-[#EB0A1E] cursor-pointer">View All</span>
           </div>
           <div className="p-6 space-y-6 flex-1">
-            {[
-              { title: 'Salary slips generated for May 2026', desc: '248 records processed successfully', time: '10:32 AM', icon: FileText, c: 'text-green-500', bg: 'bg-green-50' },
-              { title: 'Email sent to John Doe (EMP001)', desc: 'Salary slip for May 2026', time: '10:31 AM', icon: Send, c: 'text-blue-500', bg: 'bg-blue-50' },
-              { title: '8 emails are pending', desc: 'Retry or check email logs', time: '10:30 AM', icon: Clock, c: 'text-orange-500', bg: 'bg-orange-50' },
-              { title: 'Payroll file uploaded', desc: 'Salary_May_2026.xlsx', time: '10:29 AM', icon: UploadCloud, c: 'text-purple-500', bg: 'bg-purple-50' }
-            ].map((act, i) => (
-              <div key={i} className="flex items-start">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${act.bg} shrink-0 mt-0.5`}>
-                  <act.icon className={`w-4 h-4 ${act.c}`} />
-                </div>
-                <div className="ml-3 flex-1">
-                  <div className="flex justify-between items-start">
-                    <p className="text-sm font-semibold text-gray-900">{act.title}</p>
-                    <span className="text-xs text-gray-400 shrink-0 ml-2">{act.time}</span>
+            {recentActivities.length === 0 && (
+              <p className="text-gray-500 text-sm">No recent activities.</p>
+            )}
+            {recentActivities.map((act, i) => {
+              let Icon = Info;
+              let colors = 'text-gray-500 bg-gray-50';
+              if (act.type === 'success') { Icon = CheckCircle; colors = 'text-green-500 bg-green-50'; }
+              if (act.type === 'warning') { Icon = AlertTriangle; colors = 'text-orange-500 bg-orange-50'; }
+              if (act.type === 'error') { Icon = XCircle; colors = 'text-red-500 bg-red-50'; }
+              if (act.title.toLowerCase().includes('email')) { Icon = Send; colors = 'text-blue-500 bg-blue-50'; }
+              if (act.title.toLowerCase().includes('upload')) { Icon = UploadCloud; colors = 'text-purple-500 bg-purple-50'; }
+
+              return (
+                <div key={i} className="flex items-start">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${colors.split(' ')[1]} shrink-0 mt-0.5`}>
+                    <Icon className={`w-4 h-4 ${colors.split(' ')[0]}`} />
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">{act.desc}</p>
+                  <div className="ml-3 flex-1">
+                    <div className="flex justify-between items-start">
+                      <p className="text-sm font-semibold text-gray-900">{act.title}</p>
+                      <span className="text-xs text-gray-400 shrink-0 ml-2">
+                        {new Date(act.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">{act.desc}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
