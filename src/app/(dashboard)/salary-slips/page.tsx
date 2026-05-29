@@ -8,8 +8,7 @@ import SalarySlipActions from '@/components/salary-slips/SalarySlipActions';
 import SalarySlipTable from '@/components/salary-slips/SalarySlipTable';
 import SalarySlipPreviewModal from '@/components/salary-slips/SalarySlipPreviewModal';
 import { createClient } from '@/lib/supabase/client';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { generatePdfBlob } from '@/lib/pdf-generator';
 
 export default function SalarySlipsPage() {
   const [data, setData] = useState<EnrichedSalarySlip[]>([]);
@@ -17,6 +16,7 @@ export default function SalarySlipsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{current: number, total: number, message: string} | null>(null);
   
   const [filters, setFilters] = useState<FilterState>({
     month: 'All',
@@ -74,63 +74,19 @@ export default function SalarySlipsPage() {
   };
 
   // --- PDF Generation Logic ---
-  const generatePdfBlob = (record: EnrichedSalarySlip): Blob => {
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(235, 10, 30); // Toyota Red
-    doc.text('TOYOTA', 14, 20);
-    
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    doc.text('Nippon Toyota', 14, 26);
-    
-    doc.setFontSize(16);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Salary Slip', 140, 20);
-    doc.setFontSize(10);
-    doc.text(`Month: ${record.month}/${record.year}`, 140, 26);
-
-    // Details
-    autoTable(doc, {
-      startY: 40,
-      head: [['Employee Details', '']],
-      body: [
-        ['Employee ID:', record.employee_code],
-        ['Name:', record.employee_name],
-        ['Designation:', record.designation],
-      ],
-      theme: 'plain',
-      styles: { fontSize: 10, cellPadding: 2 }
-    });
-
-    const formatCurrency = (num: number) => `Rs. ${new Intl.NumberFormat('en-IN').format(num || 0)}`;
-
-    // Financials
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY + 10,
-      head: [['Earnings', 'Amount', 'Deductions', 'Amount']],
-      body: [
-        ['Base Salary', formatCurrency(record.base_salary), 'Total Deductions', formatCurrency(record.deductions)],
-        ['HRA', formatCurrency(record.hra), '', ''],
-        ['Allowances', formatCurrency(record.allowances), '', ''],
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0] }
-    });
-
-    // Totals
-    autoTable(doc, {
-      startY: (doc as any).lastAutoTable.finalY,
-      body: [
-        ['Net Salary', '', '', formatCurrency(record.net_salary)]
-      ],
-      theme: 'grid',
-      styles: { fontStyle: 'bold', textColor: [235, 10, 30] } // Red Net Salary
-    });
-
-    return doc.output('blob');
+  const handleDownloadPdf = async (record: EnrichedSalarySlip) => {
+    try {
+      const blob = await generatePdfBlob(record);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Salary_Slip_${record.employee_code}_${record.month}_${record.year}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(err) {
+       console.error("PDF Download error", err);
+       alert("Failed to generate PDF");
+    }
   };
 
   const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -142,70 +98,68 @@ export default function SalarySlipsPage() {
     });
   };
 
-  const handleDownloadPdf = (record: EnrichedSalarySlip) => {
-    const blob = generatePdfBlob(record);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Salary_Slip_${record.employee_code}_${record.month}_${record.year}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleGeneratePdf = async (record: EnrichedSalarySlip) => {
-    setIsGenerating(true);
+  const generateSinglePdf = async (record: EnrichedSalarySlip) => {
     try {
-      const blob = generatePdfBlob(record);
+      const blob = await generatePdfBlob(record);
       const fileName = `salary_slips/${record.employee_code}_${record.month}_${record.year}.pdf`;
-      
       const base64 = await blobToBase64(blob);
-      
-      // Upload via Server Action to bypass RLS
       const result = await uploadPdfToStorage(fileName, base64);
 
       if (!result.success) {
         console.error("Storage error:", result.error);
-        alert("Failed to upload PDF to storage: " + result.error);
-        return;
+        return false;
       }
       
-      // Save metadata to DB
       await saveGeneratedPdfMetadata(record.id, record.employee_id, result.publicUrl!, fileName);
-      
-      // Refresh data
-      await fetchData();
+      return true;
     } catch (e) {
       console.error(e);
-      alert("Error generating PDF");
-    } finally {
-      setIsGenerating(false);
+      return false;
+    }
+  };
+
+  const handleGeneratePdf = async (record: EnrichedSalarySlip) => {
+    setIsGenerating(true);
+    await generateSinglePdf(record);
+    await fetchData();
+    setIsGenerating(false);
+  };
+
+  const sendSingleEmail = async (record: EnrichedSalarySlip) => {
+    try {
+      await sendEmailSimulation(record.id, record.employee_id, record.email);
+      return true;
+    } catch (e) {
+      console.error(e);
+      return false;
     }
   };
 
   const handleSendEmail = async (record: EnrichedSalarySlip) => {
     setIsSending(true);
-    try {
-      // Simulation of email dispatch that writes to email_logs table
-      await sendEmailSimulation(record.id, record.employee_id, record.email);
-      await fetchData();
-      alert(`Email successfully queued for ${record.employee_name}`);
-    } catch (e) {
-      console.error(e);
-      alert("Error sending email");
-    } finally {
-      setIsSending(false);
-    }
+    await sendSingleEmail(record);
+    await fetchData();
+    alert(`Email successfully queued for ${record.employee_name}`);
+    setIsSending(false);
   };
 
   // --- Batch Actions ---
   const handleGenerateAll = async () => {
     if (!confirm(`Are you sure you want to regenerate all ${data.length} slips?`)) return;
     setIsGenerating(true);
-    for (const record of data) {
-      await handleGeneratePdf(record);
+    setBatchProgress({ current: 0, total: data.length, message: 'Generating PDFs...' });
+    
+    let successCount = 0;
+    for (let i = 0; i < data.length; i++) {
+      const success = await generateSinglePdf(data[i]);
+      if (success) successCount++;
+      setBatchProgress({ current: i + 1, total: data.length, message: 'Generating PDFs...' });
     }
+    
+    await fetchData();
+    setBatchProgress(null);
     setIsGenerating(false);
-    alert("Batch generation complete!");
+    alert(`Batch generation complete! Successfully generated ${successCount} out of ${data.length} slips.`);
   };
 
   const handleGenerateMissing = async () => {
@@ -217,11 +171,19 @@ export default function SalarySlipsPage() {
     if (!confirm(`Generate PDFs for ${missing.length} missing records?`)) return;
     
     setIsGenerating(true);
-    for (const record of missing) {
-      await handleGeneratePdf(record);
+    setBatchProgress({ current: 0, total: missing.length, message: 'Generating PDFs...' });
+    
+    let successCount = 0;
+    for (let i = 0; i < missing.length; i++) {
+      const success = await generateSinglePdf(missing[i]);
+      if (success) successCount++;
+      setBatchProgress({ current: i + 1, total: missing.length, message: 'Generating PDFs...' });
     }
+    
+    await fetchData();
+    setBatchProgress(null);
     setIsGenerating(false);
-    alert("Generated missing slips successfully!");
+    alert(`Generated missing slips successfully! (${successCount}/${missing.length})`);
   };
 
   const handleSendAllEmails = async () => {
@@ -233,11 +195,19 @@ export default function SalarySlipsPage() {
     if (!confirm(`Send emails for ${readyToSend.length} generated slips?`)) return;
     
     setIsSending(true);
-    for (const record of readyToSend) {
-      await handleSendEmail(record);
+    setBatchProgress({ current: 0, total: readyToSend.length, message: 'Sending Emails...' });
+    
+    let successCount = 0;
+    for (let i = 0; i < readyToSend.length; i++) {
+      const success = await sendSingleEmail(readyToSend[i]);
+      if (success) successCount++;
+      setBatchProgress({ current: i + 1, total: readyToSend.length, message: 'Sending Emails...' });
     }
+    
+    await fetchData();
+    setBatchProgress(null);
     setIsSending(false);
-    alert("Batch email dispatch complete!");
+    alert(`Batch email dispatch complete! Sent ${successCount} out of ${readyToSend.length} emails.`);
   };
 
   return (
@@ -297,6 +267,28 @@ export default function SalarySlipsPage() {
                 setPreviewRecord(null);
               }}
             />
+          )}
+
+          {/* Batch Processing Overlay Modal */}
+          {batchProgress && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-in zoom-in-95 duration-200 border border-gray-100">
+                <div className="w-16 h-16 border-4 border-red-100 border-t-[#EB0A1E] rounded-full animate-spin mx-auto mb-6"></div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{batchProgress.message}</h3>
+                <p className="text-sm font-medium text-gray-500 mb-6">
+                  Processing record {batchProgress.current} of {batchProgress.total}
+                </p>
+                <div className="w-full bg-gray-100 rounded-full h-2.5 mb-2 overflow-hidden">
+                  <div 
+                    className="bg-[#EB0A1E] h-full rounded-full transition-all duration-300 ease-out" 
+                    style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-gray-400 mt-2 text-right">
+                  {Math.round((batchProgress.current / batchProgress.total) * 100)}%
+                </p>
+              </div>
+            </div>
           )}
         </>
       )}
