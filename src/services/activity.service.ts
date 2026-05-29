@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import type { ActivityLog, CreateActivityLogDTO } from '@/types/activity';
 
 export const ActivityService = {

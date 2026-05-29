@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import type { GeneratedPdf, CreateGeneratedPdfDTO } from '@/types/pdf';
 
 export const PdfService = {

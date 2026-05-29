@@ -1,44 +1,28 @@
-import { supabase } from '@/lib/supabase/client';
-import type { Employee, CreateEmployeeDTO } from '@/types/employee';
+'use server';
 
-export const EmployeeService = {
-  /**
-   * Fetch all employees
-   */
-  async getAllEmployees(): Promise<Employee[]> {
-    // TODO: Implement fetch all from Supabase
-    return [];
-  },
+import { createAdminClient } from '@/lib/supabase/admin';
+import { EmployeeData } from '@/lib/schemas/employee.schema';
 
-  /**
-   * Fetch employee by ID
-   */
-  async getEmployeeById(id: string): Promise<Employee | null> {
-    // TODO: Implement fetch by ID from Supabase
-    return null;
-  },
+export async function saveEmployeesBatch(employees: EmployeeData[]) {
+  try {
+    const supabase = createAdminClient();
+    
+    const { data, error } = await supabase
+      .from('employees')
+      .insert(employees)
+      .select();
 
-  /**
-   * Create a new employee
-   */
-  async createEmployee(data: CreateEmployeeDTO): Promise<Employee | null> {
-    // TODO: Implement create in Supabase
-    return null;
-  },
+    if (error) {
+      console.error("Supabase insert error:", error);
+      if (error.code === '23505') {
+        return { success: false, error: "One or more Employee IDs or Emails already exist in the database." };
+      }
+      return { success: false, error: error.message };
+    }
 
-  /**
-   * Update an existing employee
-   */
-  async updateEmployee(id: string, data: Partial<CreateEmployeeDTO>): Promise<Employee | null> {
-    // TODO: Implement update in Supabase
-    return null;
-  },
-
-  /**
-   * Delete an employee
-   */
-  async deleteEmployee(id: string): Promise<boolean> {
-    // TODO: Implement delete in Supabase
-    return false;
+    return { success: true, data };
+  } catch (err: any) {
+    console.error("Save employees error:", err);
+    return { success: false, error: err.message || "An unexpected error occurred" };
   }
-};
+}
