@@ -29,13 +29,13 @@ export default function Sidebar() {
         {/* Main Dashboard Link */}
         <Link
           href="/dashboard"
-          className={`flex items-center px-2.5 py-[7px] text-[12px] font-semibold rounded-md transition-colors mb-3 ${
+          className={`flex items-center px-3 py-2 text-sm font-semibold rounded-md transition-colors mb-4 ${
             pathname === '/dashboard'
               ? 'bg-[#EB0A1E] text-white shadow-md' 
               : 'hover:bg-gray-800 hover:text-white'
           }`}
         >
-          <LayoutDashboard className={`w-[17px] h-[17px] mr-2.5 flex-shrink-0 ${pathname === '/dashboard' ? 'text-white' : 'text-gray-400'}`} />
+          <LayoutDashboard className={`w-5 h-5 mr-3 flex-shrink-0 ${pathname === '/dashboard' ? 'text-white' : 'text-gray-400'}`} />
           Dashboard
         </Link>
 
@@ -43,7 +43,7 @@ export default function Sidebar() {
         <div className="space-y-3.5 flex-1">
           {menuGroups.map((group) => (
             <div key={group.title}>
-              <h3 className="px-2.5 text-[9px] font-bold text-gray-500 tracking-wider mb-1.5 uppercase">
+              <h3 className="px-3 text-xs font-bold text-gray-500 tracking-wider mb-2 uppercase">
                 {group.title}
               </h3>
               <nav className="space-y-0.5">
@@ -53,13 +53,13 @@ export default function Sidebar() {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center px-2.5 py-[7px] text-[12.5px] font-medium rounded-md transition-colors ${
+                      className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive 
                           ? 'bg-gray-800 text-white' 
                           : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                       }`}
                     >
-                      <item.icon className="w-[17px] h-[17px] mr-2.5 flex-shrink-0" />
+                      <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
                       {item.name}
                     </Link>
                   );
@@ -72,15 +72,15 @@ export default function Sidebar() {
 
       {/* Footer Area */}
       <div className="p-2.5 bg-[#16191D] border-t border-gray-800">
-        <div className="bg-[#1F2429] p-2.5 rounded-md border border-gray-700/50 flex items-start space-x-2.5 mb-2.5">
-          <HelpCircle className="w-[17px] h-[17px] text-gray-400 flex-shrink-0 mt-0.5" />
+        <div className="bg-[#1F2429] p-3 rounded-md border border-gray-700/50 flex items-start space-x-3 mb-3">
+          <HelpCircle className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-[11px] font-medium text-white leading-tight">Need Help?</p>
-            <p className="text-[9px] text-gray-400 mt-1">Check documentation</p>
+            <p className="text-xs font-medium text-white leading-tight">Need Help?</p>
+            <p className="text-[10px] text-gray-400 mt-1">Check documentation</p>
           </div>
         </div>
         
-        <div className="text-[10px] text-gray-500 leading-tight px-1 text-center">
+        <div className="text-xs text-gray-500 leading-tight px-1 text-center">
           &copy; {new Date().getFullYear()} Nippon Toyota
         </div>
       </div>

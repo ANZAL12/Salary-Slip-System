@@ -34,14 +34,6 @@ export const sidebarNavigation = [
     title: 'REPORTS',
     items: [
       { name: 'Reports & Analytics', href: '/reports', icon: BarChart },
-      { name: 'Download Center', href: '/download-center', icon: Download },
-    ]
-  },
-  {
-    title: 'SETTINGS',
-    items: [
-      { name: 'Settings', href: '/settings', icon: Settings },
-      { name: 'Profile Settings', href: '/profile', icon: User },
     ]
   }
 ];

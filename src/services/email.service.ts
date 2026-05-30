@@ -80,13 +80,55 @@ export async function sendSalarySlipEmail(salaryRecordId: string, employeeId: st
       console.warn("Could not upload to bucket, attaching via buffer instead.", e);
     }
 
-    // 4. Send Email via Nodemailer
-    const htmlContent = getSalarySlipTemplate(emp.name, monthName, String(record.year), emp.employee_id);
-    
+    // 4. Fetch Default Email Template
+    let subject = `Salary Slip - ${monthName} ${record.year}`;
+    let htmlContent = getSalarySlipTemplate(emp.name, monthName, String(record.year), emp.employee_id);
+
+    try {
+      const { data: defaultTemplates, error: fetchError } = await supabase
+        .from('email_templates')
+        .select('subject, body_html')
+        .eq('is_default', true)
+        .limit(1);
+
+      if (fetchError) {
+        console.warn("Error fetching default template", fetchError);
+      }
+
+      const defaultTemplate = defaultTemplates?.[0];
+
+      if (defaultTemplate) {
+        const placeholders: Record<string, string> = {
+          '{{employee_name}}': emp.name,
+          '{{employee_id}}': emp.employee_id,
+          '{{designation}}': emp.designation || 'Employee',
+          '{{month}}': monthName,
+          '{{year}}': String(record.year),
+          '{{net_salary}}': Number(record.net_salary).toLocaleString('en-IN', { maximumFractionDigits: 0 }),
+          '{{company_name}}': 'Nippon Toyota',
+          '{{department}}': 'Operations'
+        };
+
+        let dynamicSubject = defaultTemplate.subject;
+        let dynamicHtml = defaultTemplate.body_html;
+        Object.keys(placeholders).forEach(key => {
+          const regex = new RegExp(key.replace(/[{}]/g, '\\$&'), 'g');
+          dynamicSubject = dynamicSubject.replace(regex, placeholders[key]);
+          dynamicHtml = dynamicHtml.replace(regex, placeholders[key]);
+        });
+
+        subject = dynamicSubject;
+        htmlContent = dynamicHtml;
+      }
+    } catch (err) {
+      console.warn("Could not load default template, falling back to static", err);
+    }
+
+    // 5. Send Email via Nodemailer
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || '"Toyota HR" <hr@toyota.com>',
       to: emp.email,
-      subject: `Salary Slip - ${monthName} ${record.year}`,
+      subject,
       html: htmlContent,
       attachments: [
         {
@@ -97,7 +139,7 @@ export async function sendSalarySlipEmail(salaryRecordId: string, employeeId: st
       ]
     });
 
-    // 5. Update email_logs (Success)
+    // 6. Update email_logs (Success)
     await supabase.from('email_logs').delete().eq('salary_record_id', salaryRecordId);
     await supabase.from('email_logs').insert({
       salary_record_id: salaryRecordId,

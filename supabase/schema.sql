@@ -82,3 +82,19 @@ CREATE INDEX idx_activity_logs_metadata ON public.activity_logs USING GIN (metad
 -- Alter Employees Table to add missing fields for Employee Management
 ALTER TABLE public.employees 
 ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active';
+
+-- Email Templates Table
+CREATE TABLE public.email_templates (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    subject VARCHAR(255) NOT NULL,
+    body_html TEXT NOT NULL,
+    body_text TEXT,
+    is_default BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index for searching templates
+CREATE INDEX idx_email_templates_name ON public.email_templates(name);
