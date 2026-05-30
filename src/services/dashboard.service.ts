@@ -128,7 +128,7 @@ export async function getDashboardMetrics(): Promise<{ success: boolean; data?: 
       .limit(4);
 
     let recentActivities = [];
-    if (!actError && activityData) {
+    if (!actError && activityData && activityData.length > 0) {
       recentActivities = activityData.map(act => ({
         title: act.action,
         desc: act.description || '',
@@ -136,10 +136,42 @@ export async function getDashboardMetrics(): Promise<{ success: boolean; data?: 
         type: 'info' as const // Simplified for now
       }));
     } else {
-      // Fallback fake activities if table is empty or doesn't exist just so UI doesn't look completely broken
-      recentActivities = [
-        { title: 'System initialized', desc: 'Dashboard metrics loaded', time: new Date().toISOString(), type: 'success' as const }
-      ];
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      // Generate dynamic activities if the activity_logs table is empty
+      recentActivities = recentUploads.map(upload => ({
+        title: 'Payroll Data Uploaded',
+        desc: `Payroll uploaded for ${monthNames[upload.month - 1]} ${upload.year} (${upload.recordCount} records)`,
+        time: upload.uploadedAt,
+        type: 'success' as const
+      }));
+
+      if (emailsSent > 0) {
+        recentActivities.push({
+          title: 'Emails Dispatched',
+          desc: `Successfully sent ${emailsSent} salary slip emails`,
+          time: new Date().toISOString(),
+          type: 'info' as const
+        });
+      }
+
+      if (emailsFailed > 0) {
+        recentActivities.push({
+          title: 'Email Delivery Failed',
+          desc: `Failed to deliver ${emailsFailed} salary slip emails`,
+          time: new Date().toISOString(),
+          type: 'error' as const
+        });
+      }
+
+      if (recentActivities.length === 0) {
+        recentActivities = [
+          { title: 'System initialized', desc: 'Ready for first payroll upload', time: new Date().toISOString(), type: 'success' as const }
+        ];
+      }
+
+      // Sort by newest first and limit to 4
+      recentActivities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+      recentActivities = recentActivities.slice(0, 4);
     }
 
     return {
