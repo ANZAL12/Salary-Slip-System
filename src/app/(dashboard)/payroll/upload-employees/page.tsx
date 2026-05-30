@@ -7,9 +7,10 @@ import EmployeeUploadZone from '@/components/payroll/EmployeeUploadZone';
 import EmployeeUploadSummary from '@/components/payroll/EmployeeUploadSummary';
 import EmployeePreviewTable, { ParsedEmployee } from '@/components/payroll/EmployeePreviewTable';
 import EmployeeValidationRules from '@/components/payroll/EmployeeValidationRules';
+import AddEmployeeModal from '@/components/payroll/AddEmployeeModal';
 import { saveEmployeesBatch } from '@/services/employee.service';
 import { employeeSchema, EmployeeData } from '@/lib/schemas/employee.schema';
-import { Download, CheckCircle2, Save, Trash2 } from 'lucide-react';
+import { Download, CheckCircle2, Save, Trash2, UserPlus } from 'lucide-react';
 
 export default function UploadEmployeesPage() {
   const [step, setStep] = useState(1);
@@ -21,6 +22,7 @@ export default function UploadEmployeesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState<{show: boolean, count: number}>({ show: false, count: 0 });
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleFileSelect = async (file: File) => {
     setIsProcessing(true);
@@ -38,7 +40,7 @@ export default function UploadEmployeesPage() {
         email: String(row['Email'] || row['email'] || '').trim(),
         designation: String(row['Designation'] || row['designation'] || '').trim(),
         dob: String(row['Date of Birth'] || row['dob'] || '').trim(),
-        status: 'Valid' // default, to be validated
+        status: 'Under Review' // default, to be validated
       }));
 
       setParsedData(employees);
@@ -63,7 +65,7 @@ export default function UploadEmployeesPage() {
 
     const validatedData = parsedData.map(emp => {
       const errors: string[] = [];
-      const result = employeeSchema.safeParse(emp);
+      const result = employeeSchema.safeParse({ ...emp, status: 'Active' });
 
       if (!result.success) {
         result.error.issues.forEach(e => errors.push(e.message));
@@ -150,6 +152,20 @@ export default function UploadEmployeesPage() {
     setMessage(null);
   };
 
+  const handleAddEmployee = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const handleAddEmployeeSubmit = (employee: ParsedEmployee) => {
+    setParsedData(prev => [...prev, employee]);
+    if (!fileName) {
+      setFileName('Manual Entry');
+      setUploadTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setStep(2);
+    }
+    setIsValidated(false);
+  };
+
   const handleModalClose = () => {
     setShowSuccessModal({ show: false, count: 0 });
     handleRemoveFile();
@@ -171,7 +187,7 @@ export default function UploadEmployeesPage() {
   const handleUpdateRow = (index: number, updatedData: ParsedEmployee) => {
     setParsedData(prev => {
       const newData = [...prev];
-      newData[index] = updatedData;
+      newData[index] = { ...updatedData, status: 'Under Review' }; // Needs re-validation after edit
       return newData;
     });
     setIsValidated(false); // require re-validation after an edit
@@ -201,7 +217,12 @@ export default function UploadEmployeesPage() {
 
       {/* Upload Zone & Summary Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-        <EmployeeUploadZone onFileSelect={handleFileSelect} onDownloadTemplate={downloadTemplate} isLoading={isProcessing || isSaving} />
+        <EmployeeUploadZone 
+          onFileSelect={handleFileSelect} 
+          onDownloadTemplate={downloadTemplate} 
+          onAddEmployee={handleAddEmployee}
+          isLoading={isProcessing || isSaving} 
+        />
         
         <EmployeeUploadSummary 
           total={total}
@@ -219,6 +240,15 @@ export default function UploadEmployeesPage() {
           <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 space-y-4 sm:space-y-0">
             <h2 className="text-lg font-bold text-gray-900 hidden sm:block">Employee Master Data</h2>
             <div className="flex items-center space-x-3 w-full sm:w-auto">
+              <button 
+                onClick={handleAddEmployee}
+                disabled={isProcessing || isSaving}
+                className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Row
+              </button>
+              
               <button 
                 onClick={handleRemoveFile}
                 disabled={isProcessing || isSaving}
@@ -278,6 +308,13 @@ export default function UploadEmployeesPage() {
           </div>
         </div>
       )}
+
+      <AddEmployeeModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onAdd={handleAddEmployeeSubmit}
+        suggestedId={`EMP${String(parsedData.length + 1).padStart(3, '0')}`}
+      />
     </div>
   );
 }

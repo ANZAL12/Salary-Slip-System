@@ -1,15 +1,16 @@
 'use client';
 
-import { UploadCloud, FileSpreadsheet, Download } from 'lucide-react';
+import { UploadCloud, FileSpreadsheet, Download, UserPlus } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 interface EmployeeUploadZoneProps {
   onFileSelect: (file: File) => void;
   onDownloadTemplate: () => void;
+  onAddEmployee?: () => void;
   isLoading?: boolean;
 }
 
-export default function EmployeeUploadZone({ onFileSelect, onDownloadTemplate, isLoading }: EmployeeUploadZoneProps) {
+export default function EmployeeUploadZone({ onFileSelect, onDownloadTemplate, onAddEmployee, isLoading }: EmployeeUploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -75,6 +76,20 @@ export default function EmployeeUploadZone({ onFileSelect, onDownloadTemplate, i
           <Download className="w-4 h-4 mr-2" />
           Download Template
         </button>
+        
+        {onAddEmployee && (
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddEmployee();
+            }}
+            disabled={isLoading}
+            className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium text-sm px-6 py-2.5 rounded-lg shadow-sm transition-colors flex items-center disabled:opacity-70"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Add Manually
+          </button>
+        )}
       </div>
 
       <p className="text-xs text-gray-400 mt-6">Supports .xlsx, .csv files up to 10MB</p>

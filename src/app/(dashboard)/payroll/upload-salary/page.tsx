@@ -7,8 +7,9 @@ import SalaryUploadZone from '@/components/payroll/SalaryUploadZone';
 import SalaryUploadSummary from '@/components/payroll/SalaryUploadSummary';
 import SalaryPreviewTable from '@/components/payroll/SalaryPreviewTable';
 import SalaryValidationRules from '@/components/payroll/SalaryValidationRules';
+import AddSalaryModal from '@/components/payroll/AddSalaryModal';
 import { validateSalaryData, saveSalaryRecordsBatch, ValidatedSalaryRecord } from '@/services/payroll.service';
-import { Download, CheckCircle2, Save, Trash2, CheckCircle } from 'lucide-react';
+import { Download, CheckCircle2, Save, Trash2, CheckCircle, UserPlus } from 'lucide-react';
 
 export default function UploadSalaryPage() {
   const [step, setStep] = useState(1);
@@ -20,6 +21,7 @@ export default function UploadSalaryPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState<{show: boolean, count: number}>({ show: false, count: 0 });
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleFileSelect = async (file: File) => {
     setIsProcessing(true);
@@ -49,7 +51,7 @@ export default function UploadSalaryPage() {
           month: String(row['Month'] || row['month'] || '').trim(),
           month_int: 0,
           year: Number(row['Year'] || row['year'] || new Date().getFullYear()),
-          status: 'Valid', // default before db check
+          status: 'Under Review', // default before db check
           errors: []
         };
       });
@@ -141,6 +143,30 @@ export default function UploadSalaryPage() {
     handleRemoveFile();
   };
 
+  const handleAddSalaryClick = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const handleAddSalarySubmit = (record: ValidatedSalaryRecord) => {
+    setParsedData(prev => [...prev, record]);
+    if (!fileName) {
+      setFileName('Manual Entry');
+      setUploadTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setStep(2);
+    }
+    setIsValidated(false);
+  };
+
+  const handleUpdateRow = (index: number, updatedData: ValidatedSalaryRecord) => {
+    setParsedData(prev => {
+      const newData = [...prev];
+      newData[index] = { ...updatedData, status: 'Under Review' }; // Needs re-validation after edit
+      return newData;
+    });
+    setIsValidated(false);
+    setStep(2);
+  };
+
   const downloadTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([{
       'Employee ID': 'EMP001',
@@ -179,7 +205,12 @@ export default function UploadSalaryPage() {
 
       {/* Upload Zone & Summary Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-        <SalaryUploadZone onFileSelect={handleFileSelect} onDownloadTemplate={downloadTemplate} isLoading={isProcessing || isSaving} />
+        <SalaryUploadZone 
+          onFileSelect={handleFileSelect} 
+          onDownloadTemplate={downloadTemplate} 
+          onAddSalary={handleAddSalaryClick}
+          isLoading={isProcessing || isSaving} 
+        />
         
         <SalaryUploadSummary 
           total={total}
@@ -197,6 +228,15 @@ export default function UploadSalaryPage() {
           <div className="flex flex-col sm:flex-row justify-between items-center mt-8 mb-4 space-y-4 sm:space-y-0">
             <h2 className="text-lg font-bold text-gray-900 hidden sm:block">Salary Data Preview</h2>
             <div className="flex items-center space-x-3 w-full sm:w-auto">
+              <button 
+                onClick={handleAddSalaryClick}
+                disabled={isProcessing || isSaving}
+                className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Row
+              </button>
+              
               <button 
                 onClick={handleRemoveFile}
                 disabled={isProcessing || isSaving}
@@ -228,7 +268,7 @@ export default function UploadSalaryPage() {
             </div>
           </div>
 
-          <SalaryPreviewTable data={parsedData} />
+          <SalaryPreviewTable data={parsedData} onUpdateRow={handleUpdateRow} />
           
           <SalaryValidationRules />
         </div>
@@ -256,6 +296,13 @@ export default function UploadSalaryPage() {
           </div>
         </div>
       )}
+
+      <AddSalaryModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onAdd={handleAddSalarySubmit}
+        suggestedId={`EMP${String(parsedData.length + 1).padStart(3, '0')}`}
+      />
     </div>
   );
 }

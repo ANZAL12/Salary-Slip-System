@@ -217,22 +217,9 @@ export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob>
   drawText('Allowances', 60, currentY + rowSpacing * 2, fontRegular, 10, grayDark);
   drawRightText(formatCurrency(record.allowances), 40 + halfWidth - 20, currentY + rowSpacing * 2, fontRegular, 10, black);
 
-  drawText('Other Allowances', 60, currentY + rowSpacing * 3, fontRegular, 10, grayDark);
-  drawRightText('-', 40 + halfWidth - 20, currentY + rowSpacing * 3, fontRegular, 10, black);
-
   // Deductions Rows
-  // Since we only have 'deductions' in the DB right now as a lump sum, we will map it nicely.
-  drawText('Provident Fund (PF)', 80 + halfWidth, currentY, fontRegular, 10, grayDark);
-  drawRightText(formatCurrency(record.deductions * 0.8), 60 + halfWidth * 2 - 20, currentY, fontRegular, 10, black); // Simulating split
-
-  drawText('Professional Tax', 80 + halfWidth, currentY + rowSpacing, fontRegular, 10, grayDark);
-  drawRightText(formatCurrency(record.deductions * 0.1), 60 + halfWidth * 2 - 20, currentY + rowSpacing, fontRegular, 10, black);
-
-  drawText('Other Deductions', 80 + halfWidth, currentY + rowSpacing * 2, fontRegular, 10, grayDark);
-  drawRightText(formatCurrency(record.deductions * 0.1), 60 + halfWidth * 2 - 20, currentY + rowSpacing * 2, fontRegular, 10, black);
-
-  drawText('Income Tax', 80 + halfWidth, currentY + rowSpacing * 3, fontRegular, 10, grayDark);
-  drawRightText('-', 60 + halfWidth * 2 - 20, currentY + rowSpacing * 3, fontRegular, 10, black);
+  drawText('Deducted Amount', 80 + halfWidth, currentY, fontRegular, 10, grayDark);
+  drawRightText(formatCurrency(record.deductions), 60 + halfWidth * 2 - 20, currentY, fontRegular, 10, black);
 
   // Totals Line separators
   page.drawLine({
@@ -366,4 +353,13 @@ export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob>
 
   const pdfBytes = await pdfDoc.save();
   return new Blob([pdfBytes as any], { type: 'application/pdf' });
+};
+
+export const generatePdfBuffer = async (record: EnrichedSalarySlip): Promise<Buffer> => {
+  // We can just reuse the blob logic, but skip the Blob conversion.
+  // Actually, wait, it's better to just extract the generation logic to a helper, or just fetch the blob and arrayBuffer it.
+  // Let's do the simplest: we will fetch the blob, convert to arrayBuffer, then Buffer.
+  const blob = await generatePdfBlob(record);
+  const arrayBuffer = await blob.arrayBuffer();
+  return Buffer.from(arrayBuffer);
 };

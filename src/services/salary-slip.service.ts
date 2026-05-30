@@ -20,6 +20,7 @@ export interface EnrichedSalarySlip {
   pdf_url: string | null;
   generated_date: string | null;
   email_status: 'Sent' | 'Pending' | 'Failed';
+  email_sent_at: string | null;
 }
 
 export interface SalarySlipStats {
@@ -57,7 +58,8 @@ export async function getSalarySlips(): Promise<{ data: EnrichedSalarySlip[], st
           generated_at
         ),
         email_logs (
-          status
+          status,
+          sent_at
         )
       `)
       .order('created_at', { ascending: false });
@@ -115,7 +117,8 @@ export async function getSalarySlips(): Promise<{ data: EnrichedSalarySlip[], st
         pdf_status,
         pdf_url: latestPdf?.pdf_url || null,
         generated_date: latestPdf?.generated_at || null,
-        email_status
+        email_status,
+        email_sent_at: latestEmail?.sent_at || null
       };
     });
 
@@ -189,4 +192,153 @@ export async function uploadPdfToStorage(fileName: string, base64Data: string) {
   } catch (err: any) {
     return { success: false, error: err.message };
   }
+}
+
+export async function bulkGeneratePendingSlips() {
+  const supabase = createAdminClient();
+  
+  // 1. Fetch all pending records (no generated_pdfs yet)
+  const { data: rawData, error } = await supabase
+    .from('salary_records')
+    .select(`
+      id, month, year, net_salary, base_salary, hra, allowances, deductions,
+      employees!inner (id, employee_id, name, designation, email),
+      generated_pdfs (id)
+    `);
+
+  if (error || !rawData) {
+    return { success: false, error: error?.message || 'Failed to fetch records' };
+  }
+
+  // Filter out those that already have a PDF
+  const pendingRecords = rawData.filter(r => !r.generated_pdfs || (Array.isArray(r.generated_pdfs) && r.generated_pdfs.length === 0));
+  
+  if (pendingRecords.length === 0) {
+    return { success: true, count: 0 };
+  }
+
+  // Import locally to avoid top-level issues if any
+  const { generatePdfBuffer } = await import('@/lib/pdf-generator');
+  
+  let successCount = 0;
+
+  for (const record of pendingRecords) {
+    try {
+      const emp = Array.isArray(record.employees) ? record.employees[0] : record.employees;
+      
+      const enrichedRecord: EnrichedSalarySlip = {
+        id: record.id,
+        month: record.month,
+        year: record.year,
+        net_salary: Number(record.net_salary),
+        base_salary: Number(record.base_salary),
+        hra: Number(record.hra),
+        allowances: Number(record.allowances),
+        deductions: Number(record.deductions),
+        employee_id: emp.id,
+        employee_code: emp.employee_id,
+        employee_name: emp.name,
+        designation: emp.designation,
+        email: emp.email,
+        pdf_status: 'Generated',
+        pdf_url: null,
+        generated_date: new Date().toISOString(),
+        email_status: 'Pending',
+        email_sent_at: null
+      };
+
+      const pdfBuffer = await generatePdfBuffer(enrichedRecord);
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthName = months[record.month - 1] || String(record.month);
+      const fileName = `SalarySlip_${emp.employee_id}_${monthName}_${record.year}.pdf`;
+
+      // Upload to storage
+      let publicUrl = '';
+      const { error: uploadError } = await supabase.storage
+        .from('salary-slips')
+        .upload(fileName, pdfBuffer, { upsert: true, contentType: 'application/pdf' });
+        
+      if (!uploadError) {
+        const { data } = supabase.storage.from('salary-slips').getPublicUrl(fileName);
+        publicUrl = data.publicUrl;
+      }
+
+      // Save to database
+      await supabase.from('generated_pdfs').insert({
+        salary_record_id: record.id,
+        employee_id: emp.id,
+        pdf_url: publicUrl || 'local_buffer',
+        file_name: fileName
+      });
+      
+      successCount++;
+    } catch (e) {
+      console.error("Bulk generate error for record", record.id, e);
+    }
+  }
+
+  return { success: true, count: successCount };
+}
+
+export async function getPendingSlipsToGenerate() {
+  const supabase = createAdminClient();
+  const { data: rawData, error } = await supabase
+    .from('salary_records')
+    .select('id, generated_pdfs (id)');
+
+  if (error || !rawData) {
+    return { success: false, data: [] };
+  }
+
+  const pending = rawData.filter(r => !r.generated_pdfs || (Array.isArray(r.generated_pdfs) && r.generated_pdfs.length === 0));
+  return { success: true, data: pending.map(p => p.id) };
+}
+
+export async function generateAndSaveSingleSlip(recordId: string) {
+  const supabase = createAdminClient();
+  const { data: record, error } = await supabase
+    .from('salary_records')
+    .select(`
+      id, month, year, net_salary, base_salary, hra, allowances, deductions,
+      employees!inner (id, employee_id, name, designation, email)
+    `)
+    .eq('id', recordId)
+    .single();
+
+  if (error || !record) return { success: false, error: 'Failed to fetch record' };
+
+  const { generatePdfBuffer } = await import('@/lib/pdf-generator');
+  const emp = Array.isArray(record.employees) ? record.employees[0] : record.employees;
+  
+  const enrichedRecord: EnrichedSalarySlip = {
+    id: record.id, month: record.month, year: record.year, net_salary: Number(record.net_salary),
+    base_salary: Number(record.base_salary), hra: Number(record.hra), allowances: Number(record.allowances),
+    deductions: Number(record.deductions), employee_id: emp.id, employee_code: emp.employee_id,
+    employee_name: emp.name, designation: emp.designation, email: emp.email, pdf_status: 'Generated',
+    pdf_url: null, generated_date: new Date().toISOString(), email_status: 'Pending', email_sent_at: null
+  };
+
+  const pdfBuffer = await generatePdfBuffer(enrichedRecord);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthName = months[record.month - 1] || String(record.month);
+  const fileName = `SalarySlip_${emp.employee_id}_${monthName}_${record.year}.pdf`;
+
+  let publicUrl = '';
+  const { error: uploadError } = await supabase.storage
+    .from('salary-slips')
+    .upload(fileName, pdfBuffer, { upsert: true, contentType: 'application/pdf' });
+    
+  if (!uploadError) {
+    const { data } = supabase.storage.from('salary-slips').getPublicUrl(fileName);
+    publicUrl = data.publicUrl;
+  }
+
+  await supabase.from('generated_pdfs').insert({
+    salary_record_id: record.id,
+    employee_id: emp.id,
+    pdf_url: publicUrl || 'local_buffer',
+    file_name: fileName
+  });
+
+  return { success: true };
 }

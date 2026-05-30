@@ -15,7 +15,8 @@ export type ValidatedSalaryRecord = RawSalaryData & {
   employee_name?: string;
   net_salary: number;
   month_int: number;
-  status: 'Valid' | 'Invalid' | 'Duplicate';
+  year: number;
+  status: 'Valid' | 'Invalid' | 'Duplicate' | 'Under Review';
   errors: string[];
 };
 

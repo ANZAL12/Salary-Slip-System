@@ -9,7 +9,7 @@ export type ParsedEmployee = {
   email: string;
   designation: string;
   dob: string;
-  status: 'Valid' | 'Invalid' | 'Duplicate';
+  status: 'Valid' | 'Invalid' | 'Duplicate' | 'Under Review';
   errors?: string[];
 };
 
@@ -165,15 +165,32 @@ export default function EmployeePreviewTable({ data, onUpdateRow }: EmployeePrev
                         />
                       ) : row.dob}
                     </td>
-                    <td className="px-6 py-3">
+                    <td className="px-6 py-4">
+                      {row.status === 'Under Review' && (
+                        <span className="px-2.5 py-1 text-xs font-medium bg-blue-50 text-blue-600 rounded-md border border-blue-100 w-fit">Under Review</span>
+                      )}
                       {row.status === 'Valid' && (
-                        <span className="px-2.5 py-1 text-xs font-medium bg-green-50 text-green-600 rounded-md border border-green-100">Valid</span>
+                        <span className="px-2.5 py-1 text-xs font-medium bg-green-50 text-green-600 rounded-md border border-green-100 w-fit">Valid</span>
                       )}
                       {row.status === 'Invalid' && (
-                        <span className="px-2.5 py-1 text-xs font-medium bg-red-50 text-[#EB0A1E] rounded-md border border-red-100" title={row.errors?.join(', ')}>Invalid</span>
+                        <div className="flex flex-col gap-1">
+                          <span className="px-2.5 py-1 text-xs font-medium bg-red-50 text-[#EB0A1E] rounded-md border border-red-100 w-fit" title={row.errors?.join(', ')}>Invalid</span>
+                          {row.errors && row.errors.length > 0 && (
+                            <span className="text-[10px] text-red-500 leading-tight" title={row.errors.join(', ')}>
+                              {row.errors[0]}
+                            </span>
+                          )}
+                        </div>
                       )}
                       {row.status === 'Duplicate' && (
-                        <span className="px-2.5 py-1 text-xs font-medium bg-orange-50 text-orange-600 rounded-md border border-orange-100">Duplicate</span>
+                        <div className="flex flex-col gap-1">
+                          <span className="px-2.5 py-1 text-xs font-medium bg-orange-50 text-orange-600 rounded-md border border-orange-100 w-fit" title={row.errors?.join(', ')}>Duplicate</span>
+                          {row.errors && row.errors.length > 0 && (
+                            <span className="text-[10px] text-orange-500 leading-tight" title={row.errors.join(', ')}>
+                              {row.errors[0]}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </td>
                     {onUpdateRow && (
