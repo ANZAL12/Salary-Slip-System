@@ -34,17 +34,23 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const isAdmin = user?.email === 'admin@gmail.com';
+
   if (
-    !user &&
+    (!user || !isAdmin) &&
     !request.nextUrl.pathname.startsWith('/login')
   ) {
-    // no user, potentially respond by redirecting the user to the login page
+    // If no user, or user is not the designated admin, redirect to login
+    // If they are logged in but not admin, sign them out first (optional, but handled safely via redirect here)
     const url = request.nextUrl.clone();
     url.pathname = '/login';
+    if (user && !isAdmin) {
+      url.searchParams.set('error', 'NotAdmin');
+    }
     return NextResponse.redirect(url);
   }
 
-  if (user && request.nextUrl.pathname.startsWith('/login')) {
+  if (user && isAdmin && request.nextUrl.pathname.startsWith('/login')) {
     // user is logged in, but trying to access login page
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
