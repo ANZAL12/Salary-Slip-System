@@ -42,7 +42,7 @@ export default function EmailLogsPage() {
   );
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -54,8 +54,9 @@ export default function EmailLogsPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
+        <div className="p-0 sm:p-4 overflow-x-auto bg-gray-50 md:bg-white">
+          {/* Desktop Table */}
+          <table className="hidden md:table w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 text-gray-700 font-medium border-b border-gray-200">
               <tr>
                 <th className="px-6 py-4">Employee ID</th>
@@ -102,6 +103,53 @@ export default function EmailLogsPage() {
               )}
             </tbody>
           </table>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden flex flex-col space-y-3 p-3">
+            {loading ? (
+              <div className="p-12 text-center text-gray-400">Loading logs...</div>
+            ) : logs.length === 0 ? (
+              <div className="p-12 text-center text-gray-400">No emails have been sent yet.</div>
+            ) : (
+              paginatedLogs.map((log: any) => (
+                <div key={log.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        {getStatusIcon(log.status)}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-sm">{log.employees?.name || '-'}</h4>
+                        <p className="text-xs text-gray-500 font-medium">{log.employees?.employee_id || '-'}</p>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      {getStatusBadge(log.status)}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 text-sm mt-2">
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Email Address</p>
+                      <p className="text-gray-900 font-medium mt-0.5 break-all">{log.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Sent At</p>
+                      <p className="text-gray-900 font-medium mt-0.5">{log.sent_at ? new Date(log.sent_at).toLocaleString() : '-'}</p>
+                    </div>
+                    {log.error_message && (
+                      <div>
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Error Message</p>
+                        <div className="mt-1 p-2 bg-red-50/50 rounded-md border border-red-100">
+                          <p className="text-xs text-red-600 font-medium">{log.error_message}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
         
         {/* Pagination Footer */}

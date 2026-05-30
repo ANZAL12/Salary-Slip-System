@@ -9,7 +9,7 @@ import {
 import { sidebarNavigation } from '@/config/navigation';
 import { SiToyota } from 'react-icons/si';
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
 
   const menuGroups = sidebarNavigation;
@@ -29,6 +29,7 @@ export default function Sidebar() {
         {/* Main Dashboard Link */}
         <Link
           href="/dashboard"
+          onClick={onClose}
           className={`flex items-center px-3 py-2 text-sm font-semibold rounded-md transition-colors mb-4 ${
             pathname === '/dashboard'
               ? 'bg-[#EB0A1E] text-white shadow-md' 
@@ -53,6 +54,7 @@ export default function Sidebar() {
                     <Link
                       key={item.name}
                       href={item.href}
+                      onClick={onClose}
                       className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive 
                           ? 'bg-gray-800 text-white' 

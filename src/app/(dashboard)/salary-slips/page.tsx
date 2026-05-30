@@ -234,7 +234,7 @@ export default function SalarySlipsPage() {
   };
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-8 bg-[#fdfdfd] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-8 bg-[#fdfdfd] min-h-screen">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -369,8 +369,9 @@ export default function SalarySlipsPage() {
 
       {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
+        <div className="p-0 sm:p-4 overflow-x-auto bg-gray-50 md:bg-white">
+          {/* Desktop Table */}
+          <table className="hidden md:table w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200">
               <tr>
                 <th className="px-6 py-4">Employee ID</th>
@@ -438,6 +439,76 @@ export default function SalarySlipsPage() {
               )}
             </tbody>
           </table>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden flex flex-col space-y-3 p-3">
+            {loading ? (
+              <div className="p-12 text-center text-gray-400">Loading records...</div>
+            ) : currentData.length === 0 ? (
+              <div className="p-12 text-center text-gray-400">No salary records match your filters.</div>
+            ) : (
+              currentData.map((row) => {
+                const actualPdfStatus = row.email_status === 'Sent' ? 'Generated' : row.pdf_status;
+                return (
+                  <div key={row.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-sm">{row.employee_name}</h4>
+                        <p className="text-xs text-gray-500 font-medium">{row.employee_code} • {row.designation}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500 font-semibold uppercase">Net Salary</p>
+                        <p className="font-bold text-gray-900 text-sm">{row.net_salary.toLocaleString('en-IN')} ₹</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm mt-2">
+                      <div>
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Period</p>
+                        <p className="text-gray-900 font-medium mt-0.5">{getMonthName(row.month)} {row.year}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Gen. Date</p>
+                        <p className="text-gray-900 font-medium mt-0.5">
+                          {row.generated_date ? new Date(row.generated_date).toLocaleDateString() : row.email_sent_at ? new Date(row.email_sent_at).toLocaleDateString() : '-'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">PDF Status</p>
+                        <div className="mt-1">{getStatusBadge(actualPdfStatus, 'pdf')}</div>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Email Status</p>
+                        <div className="mt-1">{getStatusBadge(row.email_status === 'Sent' ? 'Generated' : row.email_status, 'email')}</div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 mt-3 border-t border-gray-100 flex justify-end space-x-2">
+                      {actualPdfStatus === 'Generated' ? (
+                        <>
+                          <button onClick={() => openPreview(row)} className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center border border-gray-200">
+                            <Eye className="w-3 h-3 mr-1" /> Preview
+                          </button>
+                          <button onClick={() => handleDownloadPdf(row)} className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center border border-gray-200">
+                            <Download className="w-3 h-3 mr-1" /> PDF
+                          </button>
+                          <button 
+                            onClick={() => handleSendEmail(row.id, row.employee_id)}
+                            disabled={sendingId === row.id || isSendingBulk}
+                            className="px-3 py-1.5 text-xs font-medium text-toyota-red hover:bg-red-50 rounded-md transition-colors flex items-center border border-red-200 disabled:opacity-50" 
+                          >
+                            {sendingId === row.id ? <RefreshCw className="w-3 h-3 mr-1 animate-spin" /> : <Send className="w-3 h-3 mr-1" />} Email
+                          </button>
+                        </>
+                      ) : (
+                        <div className="text-xs text-gray-400 italic">Pending Gen.</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
         
         {/* Pagination */}

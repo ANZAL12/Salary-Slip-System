@@ -94,8 +94,9 @@ export default function EmployeePreviewTable({ data, onUpdateRow }: EmployeePrev
         </div>
       </div>
 
-      <div className="overflow-x-auto custom-scrollbar">
-        <table className="w-full text-left border-collapse min-w-[800px]">
+      <div className="p-0 sm:p-4 overflow-x-auto custom-scrollbar bg-gray-50 md:bg-white">
+        {/* Desktop Table */}
+        <table className="hidden md:table w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-gray-50 text-xs text-gray-500 border-b border-gray-100">
               <th className="px-6 py-3 font-semibold">Employee ID</th>
@@ -223,6 +224,90 @@ export default function EmployeePreviewTable({ data, onUpdateRow }: EmployeePrev
             )}
           </tbody>
         </table>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden flex flex-col space-y-3 p-3">
+          {paginatedData.length > 0 ? (
+            paginatedData.map((row) => {
+              const isEditing = editingIndex === row.originalIndex;
+              return (
+                <div key={row.originalIndex} className={`bg-white p-4 rounded-xl shadow-sm border ${row.status === 'Invalid' ? 'border-red-200' : 'border-gray-100'} flex flex-col space-y-3`}>
+                  <div className="flex justify-between items-start">
+                    <div className="font-bold text-gray-900 text-base">
+                      {isEditing ? (
+                        <input 
+                          type="text" 
+                          value={editFormData.name || ''} 
+                          onChange={e => setEditFormData({...editFormData, name: e.target.value})}
+                          className="w-full px-2 py-1 text-sm border rounded"
+                        />
+                      ) : row.name}
+                    </div>
+                    {/* Status Badge */}
+                    <div className="flex-shrink-0 ml-2">
+                      {row.status === 'Under Review' && <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide bg-blue-50 text-blue-600 rounded-md border border-blue-100">Under Review</span>}
+                      {row.status === 'Valid' && <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide bg-green-50 text-green-600 rounded-md border border-green-100">Valid</span>}
+                      {row.status === 'Invalid' && <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide bg-red-50 text-[#EB0A1E] rounded-md border border-red-100" title={row.errors?.join(', ')}>Invalid</span>}
+                      {row.status === 'Duplicate' && <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide bg-orange-50 text-orange-600 rounded-md border border-orange-100" title={row.errors?.join(', ')}>Duplicate</span>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Employee ID</p>
+                      {isEditing ? (
+                        <input type="text" value={editFormData.employee_id || ''} onChange={e => setEditFormData({...editFormData, employee_id: e.target.value})} className="w-full px-2 py-1 mt-1 text-sm border rounded" />
+                      ) : <p className="text-gray-900 font-medium mt-0.5">{row.employee_id}</p>}
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Date of Birth</p>
+                      {isEditing ? (
+                        <input type="text" value={editFormData.dob || ''} onChange={e => setEditFormData({...editFormData, dob: e.target.value})} className="w-full px-2 py-1 mt-1 text-sm border rounded" />
+                      ) : <p className="text-gray-900 font-medium mt-0.5">{row.dob}</p>}
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Email</p>
+                      {isEditing ? (
+                        <input type="text" value={editFormData.email || ''} onChange={e => setEditFormData({...editFormData, email: e.target.value})} className="w-full px-2 py-1 mt-1 text-sm border rounded" />
+                      ) : <p className="text-gray-900 font-medium mt-0.5 break-all">{row.email}</p>}
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Designation</p>
+                      {isEditing ? (
+                        <input type="text" value={editFormData.designation || ''} onChange={e => setEditFormData({...editFormData, designation: e.target.value})} className="w-full px-2 py-1 mt-1 text-sm border rounded" />
+                      ) : <p className="text-gray-900 font-medium mt-0.5">{row.designation}</p>}
+                    </div>
+                  </div>
+
+                  {(row.status === 'Invalid' || row.status === 'Duplicate') && row.errors && row.errors.length > 0 && (
+                    <div className="mt-2 p-2 bg-red-50/50 rounded-md border border-red-100">
+                      <p className="text-xs text-red-600 font-medium">{row.errors[0]}</p>
+                    </div>
+                  )}
+
+                  {onUpdateRow && (
+                    <div className="pt-3 mt-3 border-t border-gray-100 flex justify-end">
+                      {isEditing ? (
+                        <div className="flex space-x-2">
+                          <button onClick={handleCancelEdit} className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors">Cancel</button>
+                          <button onClick={() => handleSaveEdit(row.originalIndex, row)} className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors flex items-center"><Check className="w-3 h-3 mr-1" /> Save</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => handleEditClick(row)} className="px-3 py-1.5 text-xs font-medium text-toyota-red bg-red-50 hover:bg-red-100 rounded-md transition-colors flex items-center">
+                          <Edit2 className="w-3 h-3 mr-1" /> Edit Details
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="p-8 text-center text-gray-500 text-sm bg-white rounded-xl border border-gray-100">
+              {data.length === 0 ? "No data uploaded yet." : "No matching records found."}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="p-4 sm:p-6 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">

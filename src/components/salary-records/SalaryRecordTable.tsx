@@ -62,8 +62,9 @@ export default function SalaryRecordTable({
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div className="p-0 sm:p-4 overflow-x-auto bg-gray-50 md:bg-white">
+        {/* Desktop Table */}
+        <table className="hidden md:table min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50/50">
             <tr>
               <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -158,6 +159,69 @@ export default function SalaryRecordTable({
             ))}
           </tbody>
         </table>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden flex flex-col space-y-3 p-3">
+          {data.map((record) => (
+            <div key={record.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col space-y-3">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-blue-600 text-sm">{record.employees?.employee_id || 'Unknown'}</h4>
+                    <p className="text-xs text-gray-500 font-medium">{monthNames[record.month - 1]} {record.year}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 font-semibold uppercase">Net Salary</p>
+                  <p className="font-bold text-green-600 text-sm">{formatCurrency(record.net_salary)}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-sm mt-2">
+                <div>
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Base Salary</p>
+                  <p className="text-gray-900 font-medium mt-0.5">{formatCurrency(record.base_salary)}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">HRA</p>
+                  <p className="text-gray-900 font-medium mt-0.5">{formatCurrency(record.hra)}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Allowances</p>
+                  <p className="text-gray-900 font-medium mt-0.5">{formatCurrency(record.allowances)}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Deductions</p>
+                  <p className="text-gray-900 font-medium mt-0.5">{formatCurrency(record.deductions)}</p>
+                </div>
+              </div>
+
+              <div className="pt-3 mt-3 border-t border-gray-100 flex justify-end space-x-2">
+                <button
+                  onClick={() => onView(record)}
+                  className="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors flex items-center"
+                >
+                  <Eye className="w-3 h-3 mr-1" /> View
+                </button>
+                <button
+                  onClick={() => onEdit(record)}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center"
+                >
+                  <Edit2 className="w-3 h-3 mr-1" /> Edit
+                </button>
+                <button
+                  onClick={() => onDelete(record)}
+                  className="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors flex items-center"
+                >
+                  <Trash2 className="w-3 h-3 mr-1" /> Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Pagination Controls */}

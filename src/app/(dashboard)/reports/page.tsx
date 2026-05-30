@@ -229,7 +229,8 @@ export default function ReportsAnalyticsPage() {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1">
           <h3 className="text-base font-bold text-gray-900 mb-4">Payroll Summary</h3>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            {/* Desktop Table */}
+            <table className="hidden md:table w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-gray-500">
                   <th className="pb-3 font-medium">Component</th>
@@ -247,6 +248,19 @@ export default function ReportsAnalyticsPage() {
                 ))}
               </tbody>
             </table>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col space-y-3">
+              {payrollSummary.map((item, i) => (
+                <div key={i} className={`p-4 rounded-xl border ${item.isTotal ? 'bg-gray-50 border-gray-300 font-bold' : 'bg-white border-gray-100'}`}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-gray-900 text-sm">{item.component}</span>
+                    <span className="text-sm">{item.percentage.toFixed(2)}%</span>
+                  </div>
+                  <div className="text-right text-lg text-gray-900">{formatCurrency(item.amount)}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -254,7 +268,8 @@ export default function ReportsAnalyticsPage() {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1">
           <h3 className="text-base font-bold text-gray-900 mb-4">Top 5 Highest Paid Employees</h3>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            {/* Desktop Table */}
+            <table className="hidden md:table w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-gray-500">
                   <th className="pb-3 font-medium">Employee</th>
@@ -275,6 +290,26 @@ export default function ReportsAnalyticsPage() {
                 ))}
               </tbody>
             </table>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col space-y-3">
+              {topEmployees.map((emp, i) => (
+                <div key={i} className="p-4 bg-white border border-gray-100 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                      <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=random&color=fff`} alt={emp.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm leading-tight">{emp.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{emp.id}</p>
+                    </div>
+                  </div>
+                  <div className="text-right font-bold text-gray-900 text-sm">
+                    {formatCurrency(emp.netSalary)}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <Link href="/employees" className="mt-4 text-sm font-bold text-toyota-red hover:text-red-700 flex items-center gap-1 transition-colors inline-flex">
             View All Employees <span>→</span>

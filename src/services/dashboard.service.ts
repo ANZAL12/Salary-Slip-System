@@ -105,7 +105,7 @@ export async function getDashboardMetrics(): Promise<{ success: boolean; data?: 
     // 3. Get Email Stats
     const { data: emailData, error: emailError } = await supabase
       .from('email_logs')
-      .select('status, created_at'); // We select created_at to count this month if needed, but overall is fine too
+      .select('status, sent_at'); // Fix: table uses sent_at instead of created_at
 
     // For now, let's just count all time, or we can filter by current month.
     let emailsSent = 0;

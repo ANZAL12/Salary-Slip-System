@@ -1,29 +1,37 @@
 'use client';
 
-import { Bell, Calendar } from 'lucide-react';
+import { Bell, Calendar, Menu } from 'lucide-react';
 import { logout } from '@/app/(auth)/actions';
 
-export default function TopNav() {
+export default function TopNav({ onMenuClick }: { onMenuClick?: () => void }) {
   const currentMonth = new Date().toLocaleString('default', { month: 'short', year: 'numeric' });
 
   return (
-    <header className="h-[88px] bg-[#FAFBFB] flex items-center justify-between px-8 z-10 w-full">
+    <header className="h-[88px] bg-[#FAFBFB] flex items-center justify-between px-4 md:px-8 z-10 w-full">
       
-      {/* Left side: Greeting */}
-      <div className="flex flex-col justify-center">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-          Welcome back, Admin <span className="ml-2 text-xl">👋</span>
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Here&apos;s what&apos;s happening with salary slip automation today.
-        </p>
+      {/* Left side: Greeting & Mobile Menu */}
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onMenuClick}
+          className="p-2 -ml-2 text-gray-600 hover:text-gray-900 md:hidden"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <div className="flex flex-col justify-center">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 flex items-center">
+            Welcome back <span className="hidden md:inline">, Admin</span> <span className="ml-2 text-xl">👋</span>
+          </h1>
+          <p className="hidden md:block text-sm text-gray-500 mt-1">
+            Here&apos;s what&apos;s happening with salary slip automation today.
+          </p>
+        </div>
       </div>
 
       {/* Right side: Tools & Profile */}
       <div className="flex items-center space-x-6">
         
-        {/* Date Picker Button */}
-        <button className="flex items-center bg-white border border-gray-200 shadow-sm rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+        {/* Date Picker Button (Hidden on very small screens) */}
+        <button className="hidden sm:flex items-center bg-white border border-gray-200 shadow-sm rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
           {currentMonth}
           <Calendar className="w-4 h-4 ml-3 text-gray-500" />
         </button>

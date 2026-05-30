@@ -157,8 +157,8 @@ export default function DashboardPage() {
               May 2026 <span className="ml-2 text-gray-400">▼</span>
             </button>
           </div>
-          <div className="flex items-center h-64">
-            <div className="w-1/2 h-full relative">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start h-auto sm:h-64 gap-6 sm:gap-0">
+            <div className="w-full sm:w-1/2 h-48 sm:h-full relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -182,7 +182,7 @@ export default function DashboardPage() {
                 </span>
               </div>
             </div>
-            <div className="w-1/2 pl-6 space-y-4">
+            <div className="w-full sm:w-1/2 sm:pl-6 space-y-4">
               {payrollData.length === 0 && <p className="text-sm text-gray-400">No data available</p>}
               {payrollData.map((item) => (
                 <div key={item.name} className="flex items-start">
@@ -211,8 +211,8 @@ export default function DashboardPage() {
               This Month <span className="ml-2 text-gray-400">▼</span>
             </button>
           </div>
-          <div className="flex items-center h-64">
-            <div className="w-1/2 h-full relative">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start h-auto sm:h-64 gap-6 sm:gap-0">
+            <div className="w-full sm:w-1/2 h-48 sm:h-full relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -234,7 +234,7 @@ export default function DashboardPage() {
                 <span className="text-2xl font-bold text-gray-900">{totalEmails}</span>
               </div>
             </div>
-            <div className="w-1/2 pl-6 space-y-5">
+            <div className="w-full sm:w-1/2 sm:pl-6 space-y-5">
               {emailData.length === 0 && <p className="text-sm text-gray-400">No data available</p>}
               {emailData.map((item) => (
                 <div key={item.name} className="flex items-start">
@@ -262,8 +262,9 @@ export default function DashboardPage() {
             <h2 className="text-base font-bold text-gray-900">Recent Payroll Uploads</h2>
             <ArrowRight className="w-5 h-5 text-[#EB0A1E] cursor-pointer" />
           </div>
-          <div className="p-2 overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="p-0 sm:p-2 overflow-x-auto">
+            {/* Desktop Table */}
+            <table className="hidden md:table w-full text-left border-collapse">
               <thead>
                 <tr className="text-xs text-gray-500 border-b border-gray-100">
                   <th className="px-4 py-3 font-medium">File Name</th>
@@ -297,6 +298,42 @@ export default function DashboardPage() {
                 ))}
               </tbody>
             </table>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col divide-y divide-gray-100">
+              {recentUploads.length === 0 && (
+                <div className="px-4 py-8 text-center text-sm text-gray-500">No recent uploads found.</div>
+              )}
+              {recentUploads.map((row, i) => (
+                <div key={i} className="p-4 space-y-3 hover:bg-gray-50">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="font-medium text-green-700 flex items-center text-sm break-all">
+                      <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 text-[10px] mr-2 font-bold uppercase tracking-wider flex-shrink-0">XLS</span>
+                      Payroll_{monthNames[row.month-1]}_{row.year}.xlsx
+                    </div>
+                    <span className="px-2.5 py-1 text-[10px] font-medium bg-green-50 text-green-600 rounded-md border border-green-100 flex-shrink-0">Processed</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-500">Month/Year</p>
+                      <p className="font-medium text-gray-900">{monthNames[row.month-1]} {row.year}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Records</p>
+                      <p className="font-medium text-gray-900">{row.recordCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Uploaded By</p>
+                      <p className="font-medium text-gray-900">Admin</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Uploaded At</p>
+                      <p className="font-medium text-gray-900">{new Date(row.uploadedAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="p-4 border-t border-gray-100 text-center mt-auto">
             <button className="text-sm font-bold text-[#EB0A1E] w-full py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
