@@ -194,10 +194,10 @@ export default function EmailTemplatesPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col md:flex-row gap-6 p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto overflow-hidden">
+    <div className="h-[calc(100vh-80px)] flex flex-col md:flex-row gap-4 lg:gap-6 p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto overflow-hidden">
       
       {/* LEFT PANEL - Template List */}
-      <div className="w-full md:w-[320px] lg:w-[380px] flex-shrink-0 flex flex-col h-full bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="w-full md:w-[280px] lg:w-[320px] flex-shrink-0 flex flex-col h-full bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-5 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900">Templates</h2>
           
@@ -445,7 +445,7 @@ export default function EmailTemplatesPage() {
           </div>
 
           {/* RIGHT PANEL - Live Preview (Desktop Only) */}
-          <div className="w-[450px] xl:w-[500px] flex-shrink-0 hidden lg:flex flex-col bg-gray-50/50 rounded-xl border border-gray-100 overflow-hidden">
+          <div className="w-[350px] xl:w-[450px] flex-shrink-0 hidden lg:flex flex-col bg-gray-50/50 rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 bg-white flex justify-between items-center">
               <h3 className="text-sm font-bold text-gray-900">Preview</h3>
               <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded tracking-wide uppercase">Live</span>
