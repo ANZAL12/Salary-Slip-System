@@ -57,7 +57,8 @@ export async function sendSalarySlipEmail(salaryRecordId: string, employeeId: st
       pdf_status: 'Generated',
       pdf_url: null,
       generated_date: new Date().toISOString(),
-      email_status: 'Pending'
+      email_status: 'Pending',
+      email_sent_at: null
     };
 
     // 2. Generate PDF Buffer

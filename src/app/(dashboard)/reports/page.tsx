@@ -188,7 +188,7 @@ export default function ReportsAnalyticsPage() {
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(val) => `₹${val/100000}L`} dx={-10} />
                 <Tooltip 
-                  formatter={(value: number) => [formatCurrency(value), "Payroll Cost"]}
+                  formatter={(value: any) => [formatCurrency(Number(value) || 0), "Payroll Cost"]}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 />
                 <Line type="monotone" dataKey="value" stroke="#EB0A1E" strokeWidth={3} dot={{ r: 4, fill: '#EB0A1E', strokeWidth: 0 }} activeDot={{ r: 6 }} />

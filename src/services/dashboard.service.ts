@@ -127,9 +127,9 @@ export async function getDashboardMetrics(): Promise<{ success: boolean; data?: 
       .order('created_at', { ascending: false })
       .limit(4);
 
-    let recentActivities = [];
+    let recentActivities: DashboardMetrics['recentActivities'] = [];
     if (!actError && activityData && activityData.length > 0) {
-      recentActivities = activityData.map(act => ({
+      recentActivities = activityData.map((act: any) => ({
         title: act.action,
         desc: act.description || '',
         time: act.created_at, // Will be formatted by UI

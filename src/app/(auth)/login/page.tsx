@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { login } from '../actions';
 import { Building2, Loader2 } from 'lucide-react';
+import { FcGoogle } from 'react-icons/fc';
+import { createClient } from '@/lib/supabase/client';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -42,6 +44,24 @@ export default function LoginPage() {
     
     if (result?.error) {
       setError(result.error);
+      setIsPending(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsPending(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message);
       setIsPending(false);
     }
   };
@@ -118,6 +138,24 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        <div className="mt-6 flex items-center justify-center space-x-4">
+          <div className="h-px bg-gray-200 flex-1"></div>
+          <span className="text-gray-400 text-sm font-medium">OR</span>
+          <div className="h-px bg-gray-200 flex-1"></div>
+        </div>
+
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isPending}
+            className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            <FcGoogle className="w-5 h-5 mr-3" />
+            Sign in with Google
+          </button>
+        </div>
 
         <div className="mt-6 text-center text-xs text-gray-500">
           Secure enterprise authentication
