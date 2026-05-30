@@ -26,8 +26,17 @@ export async function GET(request: Request) {
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    
     if (!error) {
+      const user = data.session?.user;
+      
+      // Enforce admin-only access
+      if (user?.email !== 'admin@gmail.com') {
+        await supabase.auth.signOut();
+        return NextResponse.redirect(`${origin}/login?error=NotAdmin`);
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
