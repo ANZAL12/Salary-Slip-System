@@ -9,7 +9,8 @@ import {
   BarChart, 
   Download, 
   Settings, 
-  User 
+  User,
+  Activity
 } from 'lucide-react';
 
 export const sidebarNavigation = [
@@ -34,6 +35,7 @@ export const sidebarNavigation = [
     title: 'REPORTS',
     items: [
       { name: 'Reports & Analytics', href: '/reports', icon: BarChart },
+      { name: 'Recent Activities', href: '/recent-activities', icon: Activity },
     ]
   }
 ];

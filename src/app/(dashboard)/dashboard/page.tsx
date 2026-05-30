@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Users, FileText, Send, Clock, ArrowRight, UploadCloud, Info, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { SiToyota } from 'react-icons/si';
@@ -79,7 +80,7 @@ export default function DashboardPage() {
       {/* 4 Top Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Employees */}
-        <div className="bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 p-6 flex flex-col justify-between">
+        <Link href="/employees" className="bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md hover:border-gray-300 transition-all cursor-pointer">
           <div className="flex items-start justify-between">
             <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center">
               <Users className="w-7 h-7 text-[#EB0A1E]" />
@@ -92,10 +93,10 @@ export default function DashboardPage() {
           <p className="mt-4 text-sm font-medium text-green-600">
             Active in system
           </p>
-        </div>
+        </Link>
 
         {/* Salary Records */}
-        <div className="bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 p-6 flex flex-col justify-between">
+        <Link href="/salary-records" className="bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md hover:border-gray-300 transition-all cursor-pointer">
           <div className="flex items-start justify-between">
             <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center">
               <FileText className="w-7 h-7 text-blue-600" />
@@ -108,10 +109,10 @@ export default function DashboardPage() {
           <p className="mt-4 text-sm font-medium text-gray-500">
             {salaryRecordsTotal} <span className="font-normal text-gray-400">total records ever</span>
           </p>
-        </div>
+        </Link>
 
         {/* Emails Sent */}
-        <div className="bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 p-6 flex flex-col justify-between">
+        <Link href="/email-logs?status=sent" className="bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md hover:border-gray-300 transition-all cursor-pointer">
           <div className="flex items-start justify-between">
             <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center">
               <Send className="w-7 h-7 text-green-500" />
@@ -124,10 +125,10 @@ export default function DashboardPage() {
           <p className="mt-4 text-sm font-medium text-green-600">
             {emailSuccessRate}% <span className="text-gray-400 font-normal">success rate</span>
           </p>
-        </div>
+        </Link>
 
         {/* Pending Emails */}
-        <div className="bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 p-6 flex flex-col justify-between">
+        <Link href="/email-logs?status=failed" className="bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100 p-6 flex flex-col justify-between hover:shadow-md hover:border-gray-300 transition-all cursor-pointer">
           <div className="flex items-start justify-between">
             <div className="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center">
               <Clock className="w-7 h-7 text-orange-400" />
@@ -140,7 +141,7 @@ export default function DashboardPage() {
           <p className="mt-4 text-sm font-medium text-orange-500">
             {emailsFailed} <span className="text-gray-400 font-normal">failed emails</span>
           </p>
-        </div>
+        </Link>
       </div>
 
       {/* 2 Charts Grid */}
@@ -335,10 +336,10 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-          <div className="p-4 border-t border-gray-100 text-center mt-auto">
-            <button className="text-sm font-bold text-[#EB0A1E] w-full py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <div className="p-4 border-t border-gray-100 mt-auto">
+            <Link href="/salary-records" className="block text-center text-sm font-bold text-[#EB0A1E] w-full py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
               View All Uploads
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -346,7 +347,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
           <div className="p-6 border-b border-gray-100 flex justify-between items-center">
             <h2 className="text-base font-bold text-gray-900">Recent Activities</h2>
-            <span className="text-sm font-bold text-[#EB0A1E] cursor-pointer">View All</span>
+            <Link href="/recent-activities" className="text-sm font-bold text-[#EB0A1E] hover:underline cursor-pointer">View All</Link>
           </div>
           <div className="p-6 space-y-6 flex-1">
             {recentActivities.length === 0 && (

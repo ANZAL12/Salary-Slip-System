@@ -17,12 +17,12 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex flex-col w-[260px] bg-[#16191D] h-full text-gray-300 shadow-xl overflow-hidden">
       {/* Brand Header */}
-      <div className="flex flex-col items-center pt-4 pb-3 bg-[#16191D] border-b border-gray-800">
-        <div className="flex items-center space-x-1.5">
-          <SiToyota className="w-[26px] h-[26px] text-gray-300" />
-          <span className="text-[#EB0A1E] font-bold text-[21px] tracking-tight">TOYOTA</span>
+      <div className="flex flex-col items-center pt-5 pb-4 bg-[#16191D] border-b border-gray-800">
+        <div className="flex items-center space-x-2">
+          <SiToyota className="w-[34px] h-[34px] text-gray-300" />
+          <span className="text-[#EB0A1E] font-bold text-[26px] tracking-tight">TOYOTA</span>
         </div>
-        <span className="text-white text-[10px] mt-0.5">Nippon Toyota</span>
+        <span className="text-white text-xs mt-1 tracking-wide text-gray-400">Nippon Toyota</span>
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-3 flex flex-col">

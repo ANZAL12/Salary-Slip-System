@@ -2,18 +2,28 @@
 
 import { useEffect, useState } from 'react';
 import { getEmailLogs } from '@/services/email.service';
-import { Mail, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Mail, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 
 export default function EmailLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const itemsPerPage = 10;
 
   useEffect(() => {
     async function load() {
       const { data } = await getEmailLogs();
-      if (data) setLogs(data);
+      if (data) {
+        setLogs(data);
+      }
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const filter = params.get('status');
+        if (filter) {
+          setStatusFilter(filter);
+        }
+      }
       setLoading(false);
     }
     load();
@@ -35,21 +45,41 @@ export default function EmailLogsPage() {
     }
   };
 
-  const totalPages = Math.ceil(logs.length / itemsPerPage);
-  const paginatedLogs = logs.slice(
+  const filteredLogs = statusFilter === 'all' ? logs : logs.filter(log => log.status === statusFilter);
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+  const paginatedLogs = filteredLogs.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Mail className="w-8 h-8 text-toyota-red" />
             Email Logs
           </h1>
           <p className="text-gray-500 mt-2">Track the delivery status of all automated salary slips.</p>
+        </div>
+        
+        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-1 shadow-sm overflow-x-auto w-full sm:w-auto">
+          {['all', 'sent', 'failed', 'pending'].map((status) => (
+            <button
+              key={status}
+              onClick={() => {
+                setStatusFilter(status);
+                setCurrentPage(1);
+              }}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium capitalize transition-colors flex-1 sm:flex-none whitespace-nowrap ${
+                statusFilter === status 
+                  ? 'bg-gray-100 text-gray-900 shadow-sm border border-gray-200/50' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -72,9 +102,13 @@ export default function EmailLogsPage() {
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gray-400">Loading logs...</td>
                 </tr>
-              ) : logs.length === 0 ? (
+              ) : filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-400">No emails have been sent yet.</td>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
+                    {statusFilter === 'all' 
+                      ? 'No emails have been sent yet.' 
+                      : `No ${statusFilter} emails found.`}
+                  </td>
                 </tr>
               ) : (
                 paginatedLogs.map((log: any) => (
@@ -108,8 +142,12 @@ export default function EmailLogsPage() {
           <div className="md:hidden flex flex-col space-y-3 p-3">
             {loading ? (
               <div className="p-12 text-center text-gray-400">Loading logs...</div>
-            ) : logs.length === 0 ? (
-              <div className="p-12 text-center text-gray-400">No emails have been sent yet.</div>
+            ) : filteredLogs.length === 0 ? (
+              <div className="p-12 text-center text-gray-400">
+                {statusFilter === 'all' 
+                  ? 'No emails have been sent yet.' 
+                  : `No ${statusFilter} emails found.`}
+              </div>
             ) : (
               paginatedLogs.map((log: any) => (
                 <div key={log.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col space-y-3">
@@ -153,10 +191,10 @@ export default function EmailLogsPage() {
         </div>
         
         {/* Pagination Footer */}
-        {!loading && logs.length > 0 && (
+        {!loading && filteredLogs.length > 0 && (
           <div className="p-4 sm:p-6 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
             <p className="text-sm text-gray-500">
-              Showing {Math.min(logs.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(logs.length, currentPage * itemsPerPage)} of {logs.length} records
+              Showing {Math.min(filteredLogs.length, (currentPage - 1) * itemsPerPage + 1)} to {Math.min(filteredLogs.length, currentPage * itemsPerPage)} of {filteredLogs.length} records
             </p>
             
             {totalPages > 1 && (
