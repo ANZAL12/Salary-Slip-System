@@ -8,7 +8,7 @@
 
 The **Toyota Salary Slip Automation System** is a robust, full-stack web application designed to streamline the payroll administration process. Processing monthly salaries and distributing individual salary slips manually is incredibly time-consuming, prone to human error, and poses a risk to data security.
 
-This system solves these issues by automating the entire end-to-end workflow—from importing bulk employee and payroll data to automatically generating watermarked, secure PDF salary slips and distributing them via email. This allows HR and Administrative teams to drastically reduce their manual workload, maintain compliance, and gain immediate insights through the analytics dashboard.
+This system solves these issues by automating the entire end-to-end workflow—from importing bulk employee and payroll data to automatically generating secure PDF salary slips and distributing them via email. This allows HR and Administrative teams to drastically reduce their manual workload, maintain compliance, and gain immediate insights through the analytics dashboard.
 
 ---
 
@@ -21,9 +21,7 @@ This system solves these issues by automating the entire end-to-end workflow—f
 - [x] **Salary Records Management:** View, edit, and validate all processed salary records.
 - [x] **Salary Slip Generation:** Automated calculation of Net Salary and generation of individual slip records.
 - [x] **PDF Generation:** On-the-fly generation of highly professional, print-ready PDF salary slips.
-- [x] **PDF Watermark & Security:** Custom Toyota branding and watermarks applied to PDFs.
 - [x] **PDF Password Protection:** Automatically encrypts salary slip PDFs using the employee's Date of Birth (DDMMYYYY) as the password for enhanced security.
-- [x] **QR Verification:** Embedded QR codes within the PDF for authenticity and tracking.
 - [x] **Email Templates:** Custom, dynamic email templates with placeholders (`{{employee_name}}`, `{{net_salary}}`, etc.).
 - [x] **SMTP Email Delivery:** Automated bulk dispatch of salary slips directly to employee inboxes.
 - [x] **Email Delivery Logs:** Track success, failures, and delivery timestamps for all emails.
@@ -152,7 +150,7 @@ graph TD;
     B --> C[Salary Upload];
     C -->|Maps ID to DB| D(Salary Records);
     D --> E[PDF Generation];
-    E -->|Watermarks & QR| F(Storage Upload);
+    E -->|Uploads PDF| F(Storage Upload);
     F --> G[Email Delivery];
     G -->|SMTP via Nodemailer| H(Reports & Analytics);
 ```
