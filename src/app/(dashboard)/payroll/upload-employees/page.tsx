@@ -8,7 +8,7 @@ import EmployeeUploadSummary from '@/components/payroll/EmployeeUploadSummary';
 import EmployeePreviewTable, { ParsedEmployee } from '@/components/payroll/EmployeePreviewTable';
 import EmployeeValidationRules from '@/components/payroll/EmployeeValidationRules';
 import AddEmployeeModal from '@/components/payroll/AddEmployeeModal';
-import { saveEmployeesBatch } from '@/services/employee.service';
+import { saveEmployeesBatch, getEmployees } from '@/services/employee.service';
 import { employeeSchema, EmployeeData } from '@/lib/schemas/employee.schema';
 import { Download, CheckCircle2, Save, Trash2, UserPlus } from 'lucide-react';
 
@@ -56,9 +56,13 @@ export default function UploadEmployeesPage() {
     }
   };
 
-  const handleValidate = () => {
+  const handleValidate = async () => {
     setIsProcessing(true);
     setStep(3); // Validating
+
+    const existingResult = await getEmployees();
+    const existingIds = new Set(existingResult.data?.map(e => e.employee_id.toLowerCase()) || []);
+    const existingEmails = new Set(existingResult.data?.map(e => e.email.toLowerCase()) || []);
 
     const seenIds = new Set<string>();
     const seenEmails = new Set<string>();
@@ -71,10 +75,12 @@ export default function UploadEmployeesPage() {
         result.error.issues.forEach(e => errors.push(e.message));
       }
 
-      // Check uniqueness within the file
+      // Check uniqueness within the file AND in DB
       if (emp.employee_id) {
         if (seenIds.has(emp.employee_id.toLowerCase())) {
           errors.push("Duplicate Employee ID in file");
+        } else if (existingIds.has(emp.employee_id.toLowerCase())) {
+          errors.push("Duplicate Employee ID in DB");
         }
         seenIds.add(emp.employee_id.toLowerCase());
       }
@@ -82,6 +88,8 @@ export default function UploadEmployeesPage() {
       if (emp.email) {
         if (seenEmails.has(emp.email.toLowerCase())) {
           errors.push("Duplicate Email in file");
+        } else if (existingEmails.has(emp.email.toLowerCase())) {
+          errors.push("Duplicate Email in DB");
         }
         seenEmails.add(emp.email.toLowerCase());
       }
@@ -103,10 +111,15 @@ export default function UploadEmployeesPage() {
 
     const hasErrors = validatedData.some(d => d.status !== 'Valid');
     if (hasErrors) {
-      setMessage({ type: 'error', text: 'Validation failed. Please review the errors in the table.' });
+      setMessage({ type: 'error', text: 'Validation failed. Please review the errors or duplicates in the table.' });
     } else {
       setMessage({ type: 'success', text: 'Validation successful. Ready to save.' });
     }
+  };
+
+  const handleRemoveDuplicates = () => {
+    setParsedData(prev => prev.filter(d => d.status !== 'Duplicate'));
+    setMessage({ type: 'success', text: 'Duplicates removed. You can now save the remaining valid employees.' });
   };
 
   const handleSave = async () => {
@@ -268,14 +281,26 @@ export default function UploadEmployeesPage() {
                   Validate Data
                 </button>
               ) : (
-                <button 
-                  onClick={handleSave}
-                  disabled={!canSave || isSaving}
-                  className="flex-1 sm:flex-none flex items-center justify-center px-6 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors disabled:opacity-50"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isSaving ? 'Saving...' : 'Save Employees'}
-                </button>
+                <>
+                  {duplicate > 0 && (
+                    <button 
+                      onClick={handleRemoveDuplicates}
+                      disabled={isSaving}
+                      className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 border border-orange-400 text-orange-600 rounded-lg text-sm font-medium hover:bg-orange-50 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove Duplicates
+                    </button>
+                  )}
+                  <button 
+                    onClick={handleSave}
+                    disabled={!canSave || isSaving}
+                    className="flex-1 sm:flex-none flex items-center justify-center px-6 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {isSaving ? 'Saving...' : 'Save Employees'}
+                  </button>
+                </>
               )}
             </div>
           </div>
