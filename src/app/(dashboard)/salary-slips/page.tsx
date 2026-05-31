@@ -15,6 +15,8 @@ export default function SalarySlipsPage() {
   const [stats, setStats] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [isSendingBulk, setIsSendingBulk] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailSuccessResult, setEmailSuccessResult] = useState<{ sent: number, failed: number } | null>(null);
   const [sendingId, setSendingId] = useState<string | null>(null);
 
   // Filters
@@ -71,14 +73,15 @@ export default function SalarySlipsPage() {
     }
 
     setIsSendingBulk(true);
-    toast.success('Bulk Email Started. Please wait...', { duration: 4000 });
+    setShowEmailModal(true);
     
     const recordIds = pendingRecords.map(r => r.id);
     const res = await sendBulkSalarySlipEmails(recordIds);
     
     setIsSendingBulk(false);
+    setShowEmailModal(false);
     if (res.success) {
-      toast.success(`Bulk Email Completed! Sent: ${res.successCount}, Failed: ${res.failCount}`);
+      setEmailSuccessResult({ sent: res.successCount || 0, failed: res.failCount || 0 });
     } else {
       toast.error('Bulk Email process encountered an error.');
     }
@@ -550,14 +553,43 @@ export default function SalarySlipsPage() {
       )}
 
       {/* Email Sending Modal */}
-      {isSendingBulk && (
+      {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 p-8 text-center">
             <div className="mx-auto w-16 h-16 border-4 border-gray-100 border-t-[#EB0A1E] rounded-full animate-spin mb-6"></div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Sending Emails</h3>
-            <p className="text-gray-500 text-sm mb-0">
+            <p className="text-gray-500 text-sm mb-6">
               Please wait while we securely deliver the salary slips...
             </p>
+            <button 
+              onClick={() => setShowEmailModal(false)}
+              className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
+            >
+              Run in Background
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Email Success Modal */}
+      {emailSuccessResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 p-8 text-center">
+            <div className="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Emails Sent Successfully</h3>
+            <p className="text-gray-500 text-sm mb-6">
+              {emailSuccessResult.sent} emails sent successfully. {emailSuccessResult.failed > 0 ? `${emailSuccessResult.failed} failed.` : ''}
+            </p>
+            <button 
+              onClick={() => setEmailSuccessResult(null)}
+              className="w-full py-2 px-4 bg-[#EB0A1E] hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
