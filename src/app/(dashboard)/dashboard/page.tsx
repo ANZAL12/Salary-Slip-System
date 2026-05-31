@@ -230,7 +230,7 @@ export default function DashboardPage() {
                <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
                  <style>{`
                    @keyframes revUpPayroll {
-                     0% { transform: rotate(135deg); }
+                     0% { transform: rotate(225deg); }
                      100% { transform: rotate(var(--target-deg)); }
                    }
                    .animate-rev-payroll {
@@ -257,7 +257,7 @@ export default function DashboardPage() {
                  {fDraw > 0 && <circle cx="50" cy="50" r="32" fill="none" stroke="#10B981" strokeWidth="10" strokeDasharray={`${fDraw} 201.06`} strokeDashoffset={-(cLen + iLen)} transform="rotate(135 50 50)" />}
 
                  {/* Needle */}
-                 <g className="animate-rev-payroll" style={{ '--target-deg': `${135 + (2.7 * Number(payrollHealthRate))}deg`, transformOrigin: '50px 50px' } as React.CSSProperties}>
+                 <g className="animate-rev-payroll" style={{ '--target-deg': `${225 + (2.7 * Number(payrollHealthRate))}deg`, transformOrigin: '50px 50px' } as React.CSSProperties}>
                    <polygon points="47,50 53,50 50,15" fill="#1f2937" />
                    <circle cx="50" cy="50" r="5" fill="#1f2937" />
                    <circle cx="50" cy="50" r="2" fill="#ffffff" />
