@@ -44,7 +44,7 @@ export default function SalaryPreviewTable({ data, onUpdateRow, filterStatus = '
       matchesFilter = true;
     } else if (filterStatus === 'Duplicate') {
       matchesFilter = row.status === 'Duplicate' || 
-                      (row.employee_id && duplicateIds.has(row.employee_id.toLowerCase()));
+                      (!!row.employee_id && duplicateIds.has(row.employee_id.toLowerCase()));
     } else {
       matchesFilter = row.status === filterStatus;
     }
