@@ -124,6 +124,13 @@ export default function SalarySlipsPage() {
     setCurrentPage(1);
   };
 
+  const getVisiblePages = (current: number, total: number) => {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+    if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+    return [1, '...', current - 1, current, current + 1, '...', total];
+  };
+
   const getStatusBadge = (status: string, type: 'pdf' | 'email') => {
     if (status === 'Generated' || status === 'Sent') {
       return <span className="inline-flex items-center px-2 py-1 rounded bg-green-50 text-green-700 text-xs font-medium border border-green-100">Generated</span>;
@@ -504,17 +511,25 @@ export default function SalarySlipsPage() {
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <div className="flex items-center">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 flex items-center justify-center text-sm font-medium rounded mx-0.5 ${
-                    currentPage === page ? 'bg-[#EB0A1E] text-white' : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {page}
-                </button>
+            <div className="flex items-center space-x-1">
+              {getVisiblePages(currentPage, totalPages).map((page, idx) => (
+                typeof page === 'number' ? (
+                  <button
+                    key={`page-${page}`}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
+                      currentPage === page
+                        ? 'bg-[#EB0A1E] text-white border border-[#EB0A1E]'
+                        : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ) : (
+                  <span key={`ellipsis-${idx}`} className="w-8 h-8 flex items-center justify-center text-gray-500">
+                    ...
+                  </span>
+                )
               ))}
             </div>
             <button 

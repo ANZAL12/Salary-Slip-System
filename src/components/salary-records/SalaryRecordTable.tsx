@@ -27,6 +27,13 @@ export default function SalaryRecordTable({
   onDelete
 }: SalaryRecordTableProps) {
   
+  const getVisiblePages = (current: number, total: number) => {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    if (current <= 4) return [1, 2, 3, 4, 5, '...', total];
+    if (current >= total - 3) return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+    return [1, '...', current - 1, current, current + 1, '...', total];
+  };
+
   if (data.length === 0) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl py-16 text-center shadow-sm">
@@ -239,18 +246,24 @@ export default function SalaryRecordTable({
               <ArrowLeft className="w-4 h-4" />
             </button>
             <div className="flex items-center space-x-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => onPageChange(page)}
-                  className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
-                    currentPage === page
-                      ? 'bg-[#EB0A1E] text-white border border-[#EB0A1E]'
-                      : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {page}
-                </button>
+              {getVisiblePages(currentPage, totalPages).map((page, idx) => (
+                typeof page === 'number' ? (
+                  <button
+                    key={`page-${page}`}
+                    onClick={() => onPageChange(page)}
+                    className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
+                      currentPage === page
+                        ? 'bg-[#EB0A1E] text-white border border-[#EB0A1E]'
+                        : 'text-gray-700 bg-white border border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ) : (
+                  <span key={`ellipsis-${idx}`} className="w-8 h-8 flex items-center justify-center text-gray-500">
+                    ...
+                  </span>
+                )
               ))}
             </div>
             <button

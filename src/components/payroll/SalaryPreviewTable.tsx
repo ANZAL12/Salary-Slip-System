@@ -24,13 +24,41 @@ export default function SalaryPreviewTable({ data, onUpdateRow, filterStatus = '
 
   const dataWithOriginalIndex = data.map((d, i) => ({ ...d, originalIndex: i }));
 
-  const filteredData = dataWithOriginalIndex.filter(row => {
+  const duplicateIds = new Set<string>();
+  
+  if (filterStatus === 'Duplicate') {
+    dataWithOriginalIndex.forEach(row => {
+      if (row.status === 'Duplicate') {
+        if (row.employee_id) duplicateIds.add(row.employee_id.toLowerCase());
+      }
+    });
+  }
+
+  let filteredData = dataWithOriginalIndex.filter(row => {
     const matchesSearch = Object.values(row).some(val => 
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const matchesFilter = filterStatus === 'All' || row.status === filterStatus;
+    
+    let matchesFilter = false;
+    if (filterStatus === 'All') {
+      matchesFilter = true;
+    } else if (filterStatus === 'Duplicate') {
+      matchesFilter = row.status === 'Duplicate' || 
+                      (row.employee_id && duplicateIds.has(row.employee_id.toLowerCase()));
+    } else {
+      matchesFilter = row.status === filterStatus;
+    }
+    
     return matchesSearch && matchesFilter;
   });
+
+  if (filterStatus === 'Duplicate') {
+    filteredData.sort((a, b) => {
+      const idA = a.employee_id?.toLowerCase() || '';
+      const idB = b.employee_id?.toLowerCase() || '';
+      return idA.localeCompare(idB);
+    });
+  }
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(
@@ -212,9 +240,13 @@ export default function SalaryPreviewTable({ data, onUpdateRow, filterStatus = '
                       <div className="flex flex-col gap-1">
                         <span className="px-2.5 py-1 text-xs font-medium bg-red-50 text-[#EB0A1E] rounded-md border border-red-100 w-fit" title={row.errors?.join(', ')}>Invalid</span>
                         {row.errors && row.errors.length > 0 && (
-                          <span className="text-[10px] text-red-500 leading-tight" title={row.errors.join(', ')}>
-                            {row.errors[0]}
-                          </span>
+                          <div className="flex flex-col mt-0.5">
+                            {row.errors.map((err, i) => (
+                              <span key={i} className="text-[10px] text-red-500 leading-tight" title={err}>
+                                • {err}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
                     )}
@@ -222,9 +254,13 @@ export default function SalaryPreviewTable({ data, onUpdateRow, filterStatus = '
                       <div className="flex flex-col gap-1">
                         <span className="px-2.5 py-1 text-xs font-medium bg-orange-50 text-orange-600 rounded-md border border-orange-100 w-fit" title={row.errors?.join(', ')}>Duplicate</span>
                         {row.errors && row.errors.length > 0 && (
-                          <span className="text-[10px] text-orange-500 leading-tight" title={row.errors.join(', ')}>
-                            {row.errors[0]}
-                          </span>
+                          <div className="flex flex-col mt-0.5">
+                            {row.errors.map((err, i) => (
+                              <span key={i} className="text-[10px] text-orange-500 leading-tight" title={err}>
+                                • {err}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
                     )}
@@ -336,8 +372,10 @@ export default function SalaryPreviewTable({ data, onUpdateRow, filterStatus = '
                   </div>
 
                   {(row.status === 'Invalid' || row.status === 'Duplicate') && row.errors && row.errors.length > 0 && (
-                    <div className="mt-2 p-2 bg-red-50/50 rounded-md border border-red-100">
-                      <p className="text-xs text-red-600 font-medium">{row.errors[0]}</p>
+                    <div className={`mt-2 p-2 rounded-md border ${row.status === 'Invalid' ? 'bg-red-50/50 border-red-100' : 'bg-orange-50/50 border-orange-100'}`}>
+                      {row.errors.map((err, i) => (
+                        <p key={i} className={`text-xs font-medium ${row.status === 'Invalid' ? 'text-red-600' : 'text-orange-600'}`}>• {err}</p>
+                      ))}
                     </div>
                   )}
 

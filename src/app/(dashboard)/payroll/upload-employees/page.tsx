@@ -47,12 +47,34 @@ export default function UploadEmployeesPage() {
           return defaultVal;
         };
 
+        const parseDate = (dateStr: string) => {
+          if (!dateStr) return '';
+          // If it's already YYYY-MM-DD, return it
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+          
+          // Check for DD-MM-YYYY or DD/MM/YYYY
+          const parts = dateStr.split(/[-/]/);
+          if (parts.length === 3) {
+            // Assuming DD-MM-YYYY if first part is > 12 (definitely a day) or just standard Indian format
+            if (parts[0].length === 2 && parts[2].length === 4) {
+              return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+          }
+          
+          // Fallback to JS date parsing
+          const d = new Date(dateStr);
+          if (!isNaN(d.getTime())) {
+            return d.toISOString().split('T')[0];
+          }
+          return dateStr;
+        };
+
         return {
           employee_id: String(getVal(['employee id', 'employee_id', 'emp id', 'id'])).trim(),
           name: String(getVal(['name', 'employee name', 'full name'])).trim(),
           email: String(getVal(['email', 'email address', 'e-mail'])).trim(),
           designation: String(getVal(['designation', 'role', 'job title'])).trim(),
-          dob: String(getVal(['date of birth', 'dob', 'birth date'])).trim(),
+          dob: parseDate(String(getVal(['date of birth', 'dob', 'birth date'])).trim()),
           status: 'Under Review' // default, to be validated
         };
       });
@@ -76,8 +98,10 @@ export default function UploadEmployeesPage() {
 
     const existingResult = await getEmployees();
     const existingIds = new Set(existingResult.data?.map(e => e.employee_id.toLowerCase()) || []);
+    const existingEmails = new Set(existingResult.data?.map(e => e.email.toLowerCase()) || []);
 
     const seenIds = new Set<string>();
+    const seenEmails = new Set<string>();
 
     const validatedData = parsedData.map(emp => {
       const errors: string[] = [];
@@ -95,6 +119,15 @@ export default function UploadEmployeesPage() {
           errors.push("Duplicate Employee ID in DB");
         }
         seenIds.add(emp.employee_id.toLowerCase());
+      }
+
+      if (emp.email) {
+        if (seenEmails.has(emp.email.toLowerCase())) {
+          errors.push("Duplicate Email in file");
+        } else if (existingEmails.has(emp.email.toLowerCase())) {
+          errors.push("Duplicate Email in DB");
+        }
+        seenEmails.add(emp.email.toLowerCase());
       }
 
       if (errors.length > 0) {
