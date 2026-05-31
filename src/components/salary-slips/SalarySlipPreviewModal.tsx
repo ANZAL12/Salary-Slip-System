@@ -112,7 +112,7 @@ export default function SalarySlipPreviewModal({ isOpen, onClose, record }: Sala
             </div>
 
             {/* Net Salary Highlights */}
-            <div className="mt-6 p-4 bg-red-50/50 border border-red-100 rounded-lg flex justify-between items-center">
+            <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg flex justify-between items-center">
               <span className="font-bold text-gray-900">Net Salary</span>
               <span className="text-xl font-bold text-[#EB0A1E]">₹ {formatCurrency(record.net_salary)}</span>
             </div>

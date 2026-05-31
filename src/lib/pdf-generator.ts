@@ -138,19 +138,19 @@ export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob>
     y: height - (highlightY + 45), // height is 45
     width: width - 80,
     height: 60,
-    color: rgb(0.98, 0.94, 0.94), // very light red bg
-    borderColor: rgb(0.9, 0.8, 0.8),
+    color: rgb(0.97, 0.97, 0.97), // standard light gray bg
+    borderColor: grayLight,
     borderWidth: 1,
   });
 
-  // Red circle placeholder for icon
+  // Gray circle placeholder for icon
   page.drawCircle({
     x: 70,
     y: height - (highlightY + 15),
     size: 15,
-    color: toyotaRed
+    color: rgb(0.9, 0.9, 0.9)
   });
-  drawLucideIcon(indianRupeePath, 61, highlightY + 5, rgb(1, 1, 1), 0.75);
+  drawLucideIcon(indianRupeePath, 61, highlightY + 5, grayDark, 0.75);
 
   drawText('NET SALARY', 100, highlightY + 8, fontBold, 10, black);
   
@@ -196,12 +196,12 @@ export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob>
   });
 
   // Headers
-  drawLucideIcon(fileTextPath, 50, tableY + 8, greenText, 0.6);
-  drawText('EARNINGS', 70, tableY + 20, fontBold, 10, greenText);
+  drawLucideIcon(fileTextPath, 50, tableY + 8, grayDark, 0.6);
+  drawText('EARNINGS', 70, tableY + 20, fontBold, 10, black);
   drawRightText('Amount (Rs.)', 40 + halfWidth - 20, tableY + 20, fontBold, 10, black);
 
-  drawLucideIcon(indianRupeePath, 70 + halfWidth, tableY + 8, redText, 0.6);
-  drawText('DEDUCTIONS', 90 + halfWidth, tableY + 20, fontBold, 10, redText);
+  drawLucideIcon(indianRupeePath, 70 + halfWidth, tableY + 8, grayDark, 0.6);
+  drawText('DEDUCTIONS', 90 + halfWidth, tableY + 20, fontBold, 10, black);
   drawRightText('Amount (Rs.)', 60 + halfWidth * 2 - 20, tableY + 20, fontBold, 10, black);
 
   // Content lines
@@ -239,11 +239,11 @@ export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob>
 
   const totalEarnings = record.base_salary + record.hra + record.allowances;
 
-  drawText('TOTAL EARNINGS', 60, tableY + 145, fontBold, 10, greenText);
-  drawRightText(formatCurrency(totalEarnings), 40 + halfWidth - 20, tableY + 145, fontBold, 10, greenText);
+  drawText('TOTAL EARNINGS', 60, tableY + 145, fontBold, 10, black);
+  drawRightText(formatCurrency(totalEarnings), 40 + halfWidth - 20, tableY + 145, fontBold, 10, black);
 
-  drawText('TOTAL DEDUCTIONS', 80 + halfWidth, tableY + 145, fontBold, 10, redText);
-  drawRightText(formatCurrency(record.deductions), 60 + halfWidth * 2 - 20, tableY + 145, fontBold, 10, redText);
+  drawText('TOTAL DEDUCTIONS', 80 + halfWidth, tableY + 145, fontBold, 10, black);
+  drawRightText(formatCurrency(record.deductions), 60 + halfWidth * 2 - 20, tableY + 145, fontBold, 10, black);
 
   // --- SUMMARY EQUATION BOX ---
   const eqY = tableY + tableHeight + 20;
@@ -262,19 +262,19 @@ export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob>
   drawText('NET SALARY (Rs.)', 100, eqY + 25, fontBold, 10, black);
   
   drawText('Total Earnings (Rs.)', 210, eqY + 20, fontRegular, 9, grayDark);
-  drawText(formatCurrency(totalEarnings), 210, eqY + 40, fontBold, 12, greenText);
+  drawText(formatCurrency(totalEarnings), 210, eqY + 40, fontBold, 12, black);
 
   drawText('-', 310, eqY + 20, fontRegular, 10, black);
   drawText('-', 310, eqY + 40, fontRegular, 10, black);
 
   drawText('Total Deductions (Rs.)', 340, eqY + 20, fontRegular, 9, grayDark);
-  drawText(formatCurrency(record.deductions), 340, eqY + 40, fontBold, 12, redText);
+  drawText(formatCurrency(record.deductions), 340, eqY + 40, fontBold, 12, black);
 
   drawText('=', 440, eqY + 20, fontRegular, 10, black);
   drawText('=', 440, eqY + 40, fontRegular, 10, black);
 
   drawText('Net Salary (Rs.)', 470, eqY + 20, fontRegular, 9, grayDark);
-  drawText(formatCurrency(record.net_salary), 470, eqY + 40, fontBold, 12, greenText);
+  drawText(formatCurrency(record.net_salary), 470, eqY + 40, fontBold, 12, black);
 
 
   // --- MESSAGE BOX ---
@@ -290,8 +290,8 @@ export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob>
     color: rgb(1,1,1)
   });
 
-  drawLucideIcon(fileCheckPath, 55, msgY + 8, toyotaRed, 0.6);
-  drawText('SUMMARY', 80, msgY + 20, fontBold, 10, toyotaRed);
+  drawLucideIcon(fileCheckPath, 55, msgY + 8, grayDark, 0.6);
+  drawText('SUMMARY', 80, msgY + 20, fontBold, 10, black);
   drawText('Thank you for your contributions.', 80, msgY + 35, fontRegular, 10, black);
 
 

@@ -368,7 +368,7 @@ export default function DashboardPage() {
                <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
                  <style>{`
                    @keyframes revUpEmail {
-                     0% { transform: rotate(135deg); }
+                     0% { transform: rotate(225deg); }
                      100% { transform: rotate(var(--target-deg)); }
                    }
                    .animate-rev-email {
@@ -395,7 +395,7 @@ export default function DashboardPage() {
                  {ePendingDraw > 0 && <circle cx="50" cy="50" r="32" fill="none" stroke="#F59E0B" strokeWidth="10" strokeDasharray={`${ePendingDraw} 201.06`} strokeDashoffset={-(eSentLen + eFailedLen)} transform="rotate(135 50 50)" />}
 
                  {/* Needle */}
-                 <g className="animate-rev-email" style={{ '--target-deg': `${135 + (2.7 * Number(emailSuccessRate))}deg`, transformOrigin: '50px 50px' } as React.CSSProperties}>
+                 <g className="animate-rev-email" style={{ '--target-deg': `${225 + (2.7 * Number(emailSuccessRate))}deg`, transformOrigin: '50px 50px' } as React.CSSProperties}>
                    <polygon points="47,50 53,50 50,15" fill="#1f2937" />
                    <circle cx="50" cy="50" r="5" fill="#1f2937" />
                    <circle cx="50" cy="50" r="2" fill="#ffffff" />

@@ -55,8 +55,8 @@ export default function EmployeePreviewTable({ data, onUpdateRow, filterStatus =
       matchesFilter = true;
     } else if (filterStatus === 'Duplicate') {
       matchesFilter = emp.status === 'Duplicate' || 
-                      (emp.employee_id && duplicateIds.has(emp.employee_id.toLowerCase())) ||
-                      (emp.email && duplicateEmails.has(emp.email.toLowerCase()));
+                      (!!emp.employee_id && duplicateIds.has(emp.employee_id.toLowerCase())) ||
+                      (!!emp.email && duplicateEmails.has(emp.email.toLowerCase()));
     } else {
       matchesFilter = emp.status === filterStatus;
     }
