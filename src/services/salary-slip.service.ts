@@ -407,7 +407,7 @@ export async function generateAndSaveSlipsBatch(recordIds: string[]) {
   });
 
   const uploadResults = await Promise.all(uploadPromises);
-  const successfulUploads = uploadResults.filter(Boolean);
+  const successfulUploads = uploadResults.filter((res): res is NonNullable<typeof res> => res !== null);
 
   // 3. Bulk insert into DB in one query
   if (successfulUploads.length > 0) {
