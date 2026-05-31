@@ -105,20 +105,24 @@ export async function getDashboardMetrics(): Promise<{ success: boolean; data?: 
     // 3. Get Email Stats
     const { data: emailData, error: emailError } = await supabase
       .from('email_logs')
-      .select('status, sent_at'); // Fix: table uses sent_at instead of created_at
+      .select('status, sent_at');
 
-    // For now, let's just count all time, or we can filter by current month.
     let emailsSent = 0;
-    let emailsPending = 0;
     let emailsFailed = 0;
 
     if (!emailError && emailData) {
       emailData.forEach(log => {
         if (log.status === 'sent') emailsSent++;
-        else if (log.status === 'pending') emailsPending++;
         else if (log.status === 'failed') emailsFailed++;
       });
     }
+
+    // Pending emails are any generated PDFs that haven't been successfully sent or marked as failed
+    const { count: generatedPdfsCount } = await supabase
+      .from('generated_pdfs')
+      .select('*', { count: 'exact', head: true });
+      
+    let emailsPending = Math.max(0, (generatedPdfsCount || 0) - emailsSent - emailsFailed);
 
     // 4. Get Recent Activities
     const { data: activityData, error: actError } = await supabase

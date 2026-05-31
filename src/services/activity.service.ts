@@ -83,6 +83,23 @@ export async function getAllActivities() {
        });
     }
 
+    // 3. Get Real Activity Logs
+    const { data: actualLogs, error: logsError } = await supabase
+      .from('activity_logs')
+      .select('*');
+
+    if (!logsError && actualLogs) {
+      actualLogs.forEach(log => {
+        activities.push({
+          id: `log-${log.id}`,
+          title: log.action,
+          desc: log.description || '',
+          time: log.created_at,
+          type: 'info' // Defaulting to info, or map based on type if exists
+        });
+      });
+    }
+
     if (activities.length === 0) {
       activities.push({
         id: 'init',
