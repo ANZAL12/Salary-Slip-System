@@ -1,7 +1,7 @@
 'use client';
 
 import { Search, ChevronLeft, ChevronRight, Edit2, Check, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export type ParsedEmployee = {
   employee_id: string;
@@ -26,6 +26,10 @@ export default function EmployeePreviewTable({ data, onUpdateRow, filterStatus =
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<ParsedEmployee>>({});
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, searchTerm]);
 
   const dataWithOriginalIndex = data.map((d, i) => ({ ...d, originalIndex: i }));
 
@@ -88,10 +92,7 @@ export default function EmployeePreviewTable({ data, onUpdateRow, filterStatus =
             type="text"
             placeholder="Search employees..."
             value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
           />
         </div>
