@@ -22,7 +22,7 @@ export async function sendSalarySlipEmail(salaryRecordId: string, employeeId: st
       .from('salary_records')
       .select(`
         id, month, year, net_salary, base_salary, hra, allowances, deductions,
-        employees!inner (id, employee_id, name, designation, email)
+        employees!inner (id, employee_id, name, designation, email, dob)
       `)
       .eq('id', salaryRecordId)
       .single();
@@ -58,7 +58,8 @@ export async function sendSalarySlipEmail(salaryRecordId: string, employeeId: st
       pdf_url: null,
       generated_date: new Date().toISOString(),
       email_status: 'Pending',
-      email_sent_at: null
+      email_sent_at: null,
+      dob: emp.dob
     };
 
     // 2. Generate PDF Buffer

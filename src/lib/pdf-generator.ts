@@ -1,6 +1,7 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { EnrichedSalarySlip } from '@/services/salary-slip.service';
 import numberToWords from 'number-to-words';
+import { encryptPDF } from '@pdfsmaller/pdf-encrypt';
 
 export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob> => {
   const pdfDoc = await PDFDocument.create();
@@ -351,7 +352,16 @@ export const generatePdfBlob = async (record: EnrichedSalarySlip): Promise<Blob>
   const subWidth = fontRegular.widthOfTextAtSize('Drive Your World', 8);
   page.drawText('Drive Your World', { x: (width - subWidth)/2, y: 10, size: 8, font: fontRegular, color: rgb(1,1,1) });
 
-  const pdfBytes = await pdfDoc.save();
+  let pdfBytes = await pdfDoc.save();
+
+  if (record.dob) {
+    const [year, month, day] = record.dob.split('-');
+    if (year && month && day) {
+      const password = `${day}${month}${year}`;
+      pdfBytes = await encryptPDF(pdfBytes, password);
+    }
+  }
+
   return new Blob([pdfBytes as any], { type: 'application/pdf' });
 };
 

@@ -105,7 +105,8 @@ The system utilizes `pdf-lib` to generate PDFs natively within Node.js.
 3. **Header:** Embed company name, address, and the specific `Month Year` title.
 4. **Data Tables:** Draw horizontal and vertical lines to create a rigid tabular layout for Basic Salary, Allowances, and Deductions.
 5. **QR Code:** Generate a base64 DataURI QR Code containing verification details, embedded at the bottom right.
-6. **Output:** Return a `Uint8Array` buffer ready for Storage upload or Email attachment.
+6. **Encryption:** Encrypt the generated PDF buffer using the employee's Date of Birth (DDMMYYYY format) as the password via `@pdfsmaller/pdf-encrypt`.
+7. **Output:** Return a `Uint8Array` buffer ready for Storage upload or Email attachment.
 
 ---
 

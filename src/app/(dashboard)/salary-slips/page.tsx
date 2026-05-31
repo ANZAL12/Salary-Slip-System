@@ -85,23 +85,6 @@ export default function SalarySlipsPage() {
     load();
   };
 
-  const handleDownloadPdf = async (record: EnrichedSalarySlip) => {
-    try {
-      const blob = await generatePdfBlob(record);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `SalarySlip_${record.employee_code}_${record.month}_${record.year}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success('Downloaded successfully!');
-    } catch (e) {
-      toast.error('Download failed.');
-    }
-  };
-
   const openPreview = (record: EnrichedSalarySlip) => {
     setSelectedRecord(record);
     setPreviewModalOpen(true);
@@ -417,9 +400,6 @@ export default function SalarySlipsPage() {
                           <button onClick={() => openPreview(row)} className="p-1.5 border border-gray-200 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors" title="Preview PDF">
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button onClick={() => handleDownloadPdf(row)} className="p-1.5 border border-gray-200 rounded text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors" title="Download PDF">
-                            <Download className="w-4 h-4" />
-                          </button>
                           <button 
                             onClick={() => handleSendEmail(row.id, row.employee_id)}
                             disabled={sendingId === row.id || isSendingBulk}
@@ -488,9 +468,6 @@ export default function SalarySlipsPage() {
                         <>
                           <button onClick={() => openPreview(row)} className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center border border-gray-200">
                             <Eye className="w-3 h-3 mr-1" /> Preview
-                          </button>
-                          <button onClick={() => handleDownloadPdf(row)} className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors flex items-center border border-gray-200">
-                            <Download className="w-3 h-3 mr-1" /> PDF
                           </button>
                           <button 
                             onClick={() => handleSendEmail(row.id, row.employee_id)}
@@ -567,6 +544,19 @@ export default function SalarySlipsPage() {
             </div>
             <p className="text-sm font-medium text-gray-900">
               {generationProgress.current} of {generationProgress.total} completed
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Email Sending Modal */}
+      {isSendingBulk && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 p-8 text-center">
+            <div className="mx-auto w-16 h-16 border-4 border-gray-100 border-t-[#EB0A1E] rounded-full animate-spin mb-6"></div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Sending Emails</h3>
+            <p className="text-gray-500 text-sm mb-0">
+              Please wait while we securely deliver the salary slips...
             </p>
           </div>
         </div>

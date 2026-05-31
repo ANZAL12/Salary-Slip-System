@@ -21,6 +21,7 @@ export interface EnrichedSalarySlip {
   generated_date: string | null;
   email_status: 'Sent' | 'Pending' | 'Failed';
   email_sent_at: string | null;
+  dob?: string;
 }
 
 export interface SalarySlipStats {
@@ -51,7 +52,8 @@ export async function getSalarySlips(): Promise<{ data: EnrichedSalarySlip[], st
           employee_id,
           name,
           designation,
-          email
+          email,
+          dob
         ),
         generated_pdfs (
           pdf_url,
@@ -118,7 +120,8 @@ export async function getSalarySlips(): Promise<{ data: EnrichedSalarySlip[], st
         pdf_url: latestPdf?.pdf_url || null,
         generated_date: latestPdf?.generated_at || null,
         email_status,
-        email_sent_at: latestEmail?.sent_at || null
+        email_sent_at: latestEmail?.sent_at || null,
+        dob: emp?.dob
       };
     });
 
@@ -202,7 +205,7 @@ export async function bulkGeneratePendingSlips() {
     .from('salary_records')
     .select(`
       id, month, year, net_salary, base_salary, hra, allowances, deductions,
-      employees!inner (id, employee_id, name, designation, email),
+      employees!inner (id, employee_id, name, designation, email, dob),
       generated_pdfs (id)
     `);
 
@@ -244,7 +247,8 @@ export async function bulkGeneratePendingSlips() {
         pdf_url: null,
         generated_date: new Date().toISOString(),
         email_status: 'Pending',
-        email_sent_at: null
+        email_sent_at: null,
+        dob: emp.dob
       };
 
       const pdfBuffer = await generatePdfBuffer(enrichedRecord);
@@ -300,7 +304,7 @@ export async function generateAndSaveSingleSlip(recordId: string) {
     .from('salary_records')
     .select(`
       id, month, year, net_salary, base_salary, hra, allowances, deductions,
-      employees!inner (id, employee_id, name, designation, email)
+      employees!inner (id, employee_id, name, designation, email, dob)
     `)
     .eq('id', recordId)
     .single();
@@ -315,7 +319,7 @@ export async function generateAndSaveSingleSlip(recordId: string) {
     base_salary: Number(record.base_salary), hra: Number(record.hra), allowances: Number(record.allowances),
     deductions: Number(record.deductions), employee_id: emp.id, employee_code: emp.employee_id,
     employee_name: emp.name, designation: emp.designation, email: emp.email, pdf_status: 'Generated',
-    pdf_url: null, generated_date: new Date().toISOString(), email_status: 'Pending', email_sent_at: null
+    pdf_url: null, generated_date: new Date().toISOString(), email_status: 'Pending', email_sent_at: null, dob: emp.dob
   };
 
   const pdfBuffer = await generatePdfBuffer(enrichedRecord);

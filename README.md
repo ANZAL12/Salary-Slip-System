@@ -22,6 +22,7 @@ This system solves these issues by automating the entire end-to-end workflow—f
 - [x] **Salary Slip Generation:** Automated calculation of Net Salary and generation of individual slip records.
 - [x] **PDF Generation:** On-the-fly generation of highly professional, print-ready PDF salary slips.
 - [x] **PDF Watermark & Security:** Custom Toyota branding and watermarks applied to PDFs.
+- [x] **PDF Password Protection:** Automatically encrypts salary slip PDFs using the employee's Date of Birth (DDMMYYYY) as the password for enhanced security.
 - [x] **QR Verification:** Embedded QR codes within the PDF for authenticity and tracking.
 - [x] **Email Templates:** Custom, dynamic email templates with placeholders (`{{employee_name}}`, `{{net_salary}}`, etc.).
 - [x] **SMTP Email Delivery:** Automated bulk dispatch of salary slips directly to employee inboxes.
