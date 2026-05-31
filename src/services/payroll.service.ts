@@ -35,38 +35,31 @@ const monthMap: Record<string, number> = {
   'december': 12, 'dec': 12, '12': 12
 };
 
-export async function validateSalaryData(rawRecords: RawSalaryData[]): Promise<ValidatedSalaryRecord[]> {
+export async function validateSalaryData(rawRecords: any[]) {
   try {
     const supabase = createAdminClient();
     
-    // Extract unique employee IDs from the file
-    const uniqueEmployeeIds = Array.from(new Set(rawRecords.map(r => r.employee_id.trim())));
-    
-    // Fetch employee data from DB
+    // Fetch all employees to avoid URI too long errors on large datasets
     const { data: dbEmployees, error: empError } = await supabase
       .from('employees')
-      .select('id, employee_id, name')
-      .in('employee_id', uniqueEmployeeIds);
+      .select('id, employee_id, name');
       
     if (empError) throw empError;
     
     // Create map of employee_id -> { id, name }
     const employeeMap = new Map<string, { id: string, name: string }>();
     dbEmployees?.forEach(e => {
-      employeeMap.set(e.employee_id, { id: e.id, name: e.name });
+      employeeMap.set(e.employee_id.toLowerCase().trim(), { id: e.id, name: e.name });
     });
 
-    // We also need to check for existing records for duplicate detection.
-    // For large uploads, we might just query all records for these employees for the given year/months.
     const years = Array.from(new Set(rawRecords.map(r => r.year)));
-    const employeeUuids = dbEmployees?.map(e => e.id) || [];
     
     let existingRecordsMap = new Set<string>();
-    if (employeeUuids.length > 0 && years.length > 0) {
+    if (years.length > 0) {
+      // Just filter by year to avoid massive .in() queries with thousands of UUIDs
       const { data: existingSalaries, error: salError } = await supabase
         .from('salary_records')
         .select('employee_id, month, year')
-        .in('employee_id', employeeUuids)
         .in('year', years);
         
       if (!salError && existingSalaries) {
@@ -76,11 +69,13 @@ export async function validateSalaryData(rawRecords: RawSalaryData[]): Promise<V
       }
     }
 
+    const seenKeys = new Set<string>();
+
     const validatedData: ValidatedSalaryRecord[] = rawRecords.map(record => {
       let status: 'Valid' | 'Invalid' | 'Duplicate' = 'Valid';
       let errors: string[] = [];
 
-      const empIdStr = record.employee_id.trim();
+      const empIdStr = record.employee_id.trim().toLowerCase();
       const dbEmp = employeeMap.get(empIdStr);
       
       if (!dbEmp) {
@@ -97,13 +92,19 @@ export async function validateSalaryData(rawRecords: RawSalaryData[]): Promise<V
 
       const netSalary = (record.base_salary + record.hra + record.allowances) - record.deductions;
 
-      // Check DB duplicates
+      // Check duplicates
       if (dbEmp && monthInt) {
         const uniqueKey = `${dbEmp.id}-${monthInt}-${record.year}`;
-        if (existingRecordsMap.has(uniqueKey)) {
+        
+        if (seenKeys.has(uniqueKey)) {
           status = 'Duplicate';
-          errors.push(`Record already exists for ${monthStr} ${record.year}`);
+          errors.push(`Duplicate record for ${monthStr} ${record.year} found in the uploaded file`);
+        } else if (existingRecordsMap.has(uniqueKey)) {
+          status = 'Duplicate';
+          errors.push(`Record already exists for ${monthStr} ${record.year} in database`);
         }
+        
+        seenKeys.add(uniqueKey);
       }
 
       return {

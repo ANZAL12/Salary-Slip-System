@@ -346,3 +346,73 @@ export async function generateAndSaveSingleSlip(recordId: string) {
 
   return { success: true };
 }
+
+export async function generateAndSaveSlipsBatch(recordIds: string[]) {
+  const supabase = createAdminClient();
+  
+  // 1. Fetch all records in one query
+  const { data: records, error } = await supabase
+    .from('salary_records')
+    .select(`
+      id, month, year, net_salary, base_salary, hra, allowances, deductions,
+      employees!inner (id, employee_id, name, designation, email, dob)
+    `)
+    .in('id', recordIds);
+
+  if (error || !records || records.length === 0) return { success: false, error: 'Failed to fetch records' };
+
+  const { generatePdfBuffer } = await import('@/lib/pdf-generator');
+  
+  // 2. Generate and upload PDFs concurrently
+  const generatedPdfs = [];
+  
+  // Run all PDF generation and uploads in parallel
+  const uploadPromises = records.map(async (record) => {
+    try {
+      const emp = Array.isArray(record.employees) ? record.employees[0] : record.employees;
+      
+      const enrichedRecord: EnrichedSalarySlip = {
+        id: record.id, month: record.month, year: record.year, net_salary: Number(record.net_salary),
+        base_salary: Number(record.base_salary), hra: Number(record.hra), allowances: Number(record.allowances),
+        deductions: Number(record.deductions), employee_id: emp.id, employee_code: emp.employee_id,
+        employee_name: emp.name, designation: emp.designation, email: emp.email, pdf_status: 'Generated',
+        pdf_url: null, generated_date: new Date().toISOString(), email_status: 'Pending', email_sent_at: null, dob: emp.dob
+      };
+
+      const pdfBuffer = await generatePdfBuffer(enrichedRecord);
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthName = months[record.month - 1] || String(record.month);
+      const fileName = `SalarySlip_${emp.employee_id}_${monthName}_${record.year}.pdf`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('salary-slips')
+        .upload(fileName, pdfBuffer, { upsert: true, contentType: 'application/pdf' });
+        
+      let publicUrl = '';
+      if (!uploadError) {
+        const { data } = supabase.storage.from('salary-slips').getPublicUrl(fileName);
+        publicUrl = data.publicUrl;
+      }
+
+      return {
+        salary_record_id: record.id,
+        employee_id: emp.id,
+        pdf_url: publicUrl || 'local_buffer',
+        file_name: fileName
+      };
+    } catch (e) {
+      console.error("Failed to generate PDF for record", record.id, e);
+      return null;
+    }
+  });
+
+  const uploadResults = await Promise.all(uploadPromises);
+  const successfulUploads = uploadResults.filter(Boolean);
+
+  // 3. Bulk insert into DB in one query
+  if (successfulUploads.length > 0) {
+    await supabase.from('generated_pdfs').insert(successfulUploads);
+  }
+
+  return { success: true, count: successfulUploads.length };
+}

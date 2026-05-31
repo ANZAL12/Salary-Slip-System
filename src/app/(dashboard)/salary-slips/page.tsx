@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { getSalarySlips, EnrichedSalarySlip, getPendingSlipsToGenerate, generateAndSaveSingleSlip } from '@/services/salary-slip.service';
+import { getSalarySlips, EnrichedSalarySlip, getPendingSlipsToGenerate, generateAndSaveSlipsBatch } from '@/services/salary-slip.service';
 import { sendSalarySlipEmail, sendBulkSalarySlipEmails } from '@/services/email.service';
 import { bulkGeneratePendingSlips } from '@/services/salary-slip.service';
 import { generatePdfBlob } from '@/lib/pdf-generator';
@@ -165,10 +165,31 @@ export default function SalarySlipsPage() {
       setGenerationProgress({ show: true, current: 0, total: pendingIds.length });
       
       let successCount = 0;
-      for (let i = 0; i < pendingIds.length; i++) {
-        const res = await generateAndSaveSingleSlip(pendingIds[i]);
-        if (res.success) successCount++;
-        setGenerationProgress(p => ({ ...p, current: i + 1 }));
+      const batchSize = 50; 
+      let currentProgress = 0;
+      
+      for (let i = 0; i < pendingIds.length; i += batchSize) {
+        const batch = pendingIds.slice(i, i + batchSize);
+        
+        // Visual interpolation: tick up the progress bar smoothly while waiting for the server
+        let simulatedProgress = currentProgress;
+        const interval = setInterval(() => {
+          if (simulatedProgress < currentProgress + batch.length - 1) {
+            simulatedProgress++;
+            setGenerationProgress(p => ({ ...p, current: simulatedProgress }));
+          }
+        }, 50); // Tick every 50ms
+
+        const res = await generateAndSaveSlipsBatch(batch);
+        
+        clearInterval(interval);
+        
+        if (res.success && res.count) {
+          successCount += res.count;
+        }
+        
+        currentProgress = Math.min(i + batchSize, pendingIds.length);
+        setGenerationProgress(p => ({ ...p, current: currentProgress }));
       }
 
       toast.success(`Successfully generated and saved ${successCount} salary slips!`);

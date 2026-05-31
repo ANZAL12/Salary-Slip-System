@@ -15,23 +15,6 @@ interface SalarySlipPreviewModalProps {
 export default function SalarySlipPreviewModal({ isOpen, onClose, record }: SalarySlipPreviewModalProps) {
   if (!isOpen || !record) return null;
 
-  const handleDownload = async () => {
-    try {
-      const blob = await generatePdfBlob(record);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `SalarySlip_${record.employee_code}_${record.month}_${record.year}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("PDF generation error:", error);
-      toast.error('Failed to download PDF.');
-    }
-  };
-
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('en-IN');
   };
@@ -141,10 +124,6 @@ export default function SalarySlipPreviewModal({ isOpen, onClose, record }: Sala
         <div className="px-6 py-4 border-t border-gray-100 bg-white flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
             Close
-          </button>
-          <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#EB0A1E] rounded-lg hover:bg-red-700 transition-colors shadow-sm">
-            <Download className="w-4 h-4" />
-            Download PDF
           </button>
         </div>
       </div>
