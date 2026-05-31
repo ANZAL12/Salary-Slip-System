@@ -34,23 +34,42 @@ export default function UploadSalaryPage() {
       const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
       const initialRecords: ValidatedSalaryRecord[] = rawJson.map((row: any) => {
-        const base_salary = Number(row['Base Salary'] || row['base_salary'] || 0);
-        const hra = Number(row['HRA'] || row['hra'] || 0);
-        const allowances = Number(row['Allowances'] || row['allowances'] || 0);
-        const deductions = Number(row['Deductions'] || row['deductions'] || 0);
+        const getVal = (keys: string[], defaultVal: any = '') => {
+          const rowKeys = Object.keys(row);
+          for (const key of rowKeys) {
+            const cleanKey = key.trim().toLowerCase();
+            if (keys.includes(cleanKey)) {
+              return row[key];
+            }
+          }
+          return defaultVal;
+        };
+
+        const parseNum = (val: any) => {
+          if (typeof val === 'number') return val;
+          if (!val) return 0;
+          const cleaned = String(val).replace(/,/g, '').replace(/[^\d.-]/g, '');
+          const parsed = Number(cleaned);
+          return isNaN(parsed) ? 0 : parsed;
+        };
+
+        const base_salary = parseNum(getVal(['base salary', 'base_salary', 'basic', 'basic salary']));
+        const hra = parseNum(getVal(['hra', 'house rent allowance']));
+        const allowances = parseNum(getVal(['allowances', 'allowance', 'other allowances']));
+        const deductions = parseNum(getVal(['deductions', 'deduction', 'tax']));
         const net_salary = (base_salary + hra + allowances) - deductions;
         
         return {
-          employee_id: String(row['Employee ID'] || row['employee_id'] || '').trim(),
+          employee_id: String(getVal(['employee id', 'employee_id', 'emp id', 'id'])).trim(),
           employee_name: '-', // Will be fetched on validation
           base_salary,
           hra,
           allowances,
           deductions,
           net_salary,
-          month: String(row['Month'] || row['month'] || '').trim(),
+          month: String(getVal(['month'])).trim(),
           month_int: 0,
-          year: Number(row['Year'] || row['year'] || new Date().getFullYear()),
+          year: parseNum(getVal(['year'])) || new Date().getFullYear(),
           status: 'Under Review', // default before db check
           errors: []
         };

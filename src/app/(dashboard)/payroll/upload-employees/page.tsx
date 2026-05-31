@@ -34,14 +34,27 @@ export default function UploadEmployeesPage() {
       const worksheet = workbook.Sheets[firstSheetName];
       const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
-      const employees: ParsedEmployee[] = rawJson.map((row: any) => ({
-        employee_id: String(row['Employee ID'] || row['employee_id'] || '').trim(),
-        name: String(row['Name'] || row['name'] || '').trim(),
-        email: String(row['Email'] || row['email'] || '').trim(),
-        designation: String(row['Designation'] || row['designation'] || '').trim(),
-        dob: String(row['Date of Birth'] || row['dob'] || '').trim(),
-        status: 'Under Review' // default, to be validated
-      }));
+      const employees: ParsedEmployee[] = rawJson.map((row: any) => {
+        const getVal = (keys: string[], defaultVal: any = '') => {
+          const rowKeys = Object.keys(row);
+          for (const key of rowKeys) {
+            const cleanKey = key.trim().toLowerCase();
+            if (keys.includes(cleanKey)) {
+              return row[key];
+            }
+          }
+          return defaultVal;
+        };
+
+        return {
+          employee_id: String(getVal(['employee id', 'employee_id', 'emp id', 'id'])).trim(),
+          name: String(getVal(['name', 'employee name', 'full name'])).trim(),
+          email: String(getVal(['email', 'email address', 'e-mail'])).trim(),
+          designation: String(getVal(['designation', 'role', 'job title'])).trim(),
+          dob: String(getVal(['date of birth', 'dob', 'birth date'])).trim(),
+          status: 'Under Review' // default, to be validated
+        };
+      });
 
       setParsedData(employees);
       setFileName(file.name);
