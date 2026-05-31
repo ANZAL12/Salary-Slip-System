@@ -62,22 +62,22 @@ This system solves these issues by automating the entire end-to-end workflow—f
 ![Dashboard Placeholder](./public/placeholder.png)
 
 ### Upload Employees
-![Upload Employees Placeholder](./public/placeholder.png)
+![Upload Employees Placeholder](./public/employees.png)
 
 ### Upload Salary
-![Upload Salary Placeholder](./public/placeholder.png)
+![Upload Salary Placeholder](./public/uploadsalary.png)
 
 ### Salary Records
-![Salary Records Placeholder](./public/placeholder.png)
+![Salary Records Placeholder](./public/salary.png)
 
 ### Salary Slips & PDF Preview
-![Salary Slips Placeholder](./public/placeholder.png)
+![Salary Slips Placeholder](./public/salaryslip.png)
 
 ### Email Templates
-![Email Templates Placeholder](./public/placeholder.png)
+![Email Templates Placeholder](./public/email_template.png)
 
 ### Reports & Analytics
-![Reports Placeholder](./public/placeholder.png)
+![Reports Placeholder](./public/reports_analytics.png)
 
 ---
 
