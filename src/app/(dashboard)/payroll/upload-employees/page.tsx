@@ -23,6 +23,7 @@ export default function UploadEmployeesPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState<{show: boolean, count: number}>({ show: false, count: 0 });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<'All' | 'Valid' | 'Invalid' | 'Duplicate'>('All');
 
   const handleFileSelect = async (file: File) => {
     setIsProcessing(true);
@@ -257,6 +258,8 @@ export default function UploadEmployeesPage() {
           duplicate={duplicate}
           fileName={fileName}
           uploadTime={uploadTime}
+          activeFilter={filterStatus}
+          onFilterChange={setFilterStatus}
         />
       </div>
 
@@ -318,7 +321,11 @@ export default function UploadEmployeesPage() {
             </div>
           </div>
 
-          <EmployeePreviewTable data={parsedData} onUpdateRow={handleUpdateRow} />
+          <EmployeePreviewTable 
+            data={parsedData} 
+            onUpdateRow={handleUpdateRow} 
+            filterStatus={filterStatus}
+          />
           
           <EmployeeValidationRules />
         </div>

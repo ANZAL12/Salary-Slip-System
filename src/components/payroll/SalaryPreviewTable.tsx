@@ -7,9 +7,10 @@ import { ValidatedSalaryRecord } from '@/services/payroll.service';
 interface SalaryPreviewTableProps {
   data: ValidatedSalaryRecord[];
   onUpdateRow?: (index: number, data: ValidatedSalaryRecord) => void;
+  filterStatus?: 'All' | 'Valid' | 'Invalid' | 'Duplicate';
 }
 
-export default function SalaryPreviewTable({ data, onUpdateRow }: SalaryPreviewTableProps) {
+export default function SalaryPreviewTable({ data, onUpdateRow, filterStatus = 'All' }: SalaryPreviewTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -19,11 +20,13 @@ export default function SalaryPreviewTable({ data, onUpdateRow }: SalaryPreviewT
 
   const dataWithOriginalIndex = data.map((d, i) => ({ ...d, originalIndex: i }));
 
-  const filteredData = dataWithOriginalIndex.filter(row => 
-    Object.values(row).some(val => 
+  const filteredData = dataWithOriginalIndex.filter(row => {
+    const matchesSearch = Object.values(row).some(val => 
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+    );
+    const matchesFilter = filterStatus === 'All' || row.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(

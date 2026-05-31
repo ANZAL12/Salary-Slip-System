@@ -9,6 +9,7 @@ import SalaryPreviewTable from '@/components/payroll/SalaryPreviewTable';
 import SalaryValidationRules from '@/components/payroll/SalaryValidationRules';
 import AddSalaryModal from '@/components/payroll/AddSalaryModal';
 import { validateSalaryData, saveSalaryRecordsBatch, ValidatedSalaryRecord } from '@/services/payroll.service';
+import { getEmployees } from '@/services/employee.service';
 import { Download, CheckCircle2, Save, Trash2, CheckCircle, UserPlus } from 'lucide-react';
 
 export default function UploadSalaryPage() {
@@ -22,6 +23,7 @@ export default function UploadSalaryPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState<{show: boolean, count: number}>({ show: false, count: 0 });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<'All' | 'Valid' | 'Invalid' | 'Duplicate'>('All');
 
   const handleFileSelect = async (file: File) => {
     setIsProcessing(true);
@@ -32,6 +34,17 @@ export default function UploadSalaryPage() {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+      // Fetch employees to resolve names immediately
+      const employeesRes = await getEmployees();
+      const employeeMap = new Map<string, string>();
+      if (employeesRes.success && employeesRes.data) {
+        employeesRes.data.forEach(emp => {
+          if (emp.employee_id) {
+            employeeMap.set(emp.employee_id.toLowerCase().trim(), emp.name);
+          }
+        });
+      }
 
       const initialRecords: ValidatedSalaryRecord[] = rawJson.map((row: any) => {
         const getVal = (keys: string[], defaultVal: any = '') => {
@@ -59,9 +72,12 @@ export default function UploadSalaryPage() {
         const deductions = parseNum(getVal(['deductions', 'deduction', 'tax']));
         const net_salary = (base_salary + hra + allowances) - deductions;
         
+        const empIdStr = String(getVal(['employee id', 'employee_id', 'emp id', 'id'])).trim();
+        const foundName = employeeMap.get(empIdStr.toLowerCase()) || '-';
+
         return {
-          employee_id: String(getVal(['employee id', 'employee_id', 'emp id', 'id'])).trim(),
-          employee_name: '-', // Will be fetched on validation
+          employee_id: empIdStr,
+          employee_name: foundName,
           base_salary,
           hra,
           allowances,
@@ -243,6 +259,8 @@ export default function UploadSalaryPage() {
           duplicate={duplicate}
           fileName={fileName}
           uploadTime={uploadTime}
+          activeFilter={filterStatus}
+          onFilterChange={setFilterStatus}
         />
       </div>
 
@@ -304,7 +322,11 @@ export default function UploadSalaryPage() {
             </div>
           </div>
 
-          <SalaryPreviewTable data={parsedData} onUpdateRow={handleUpdateRow} />
+          <SalaryPreviewTable 
+            data={parsedData} 
+            onUpdateRow={handleUpdateRow} 
+            filterStatus={filterStatus}
+          />
           
           <SalaryValidationRules />
         </div>

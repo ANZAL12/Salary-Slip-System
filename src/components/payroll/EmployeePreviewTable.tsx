@@ -16,9 +16,10 @@ export type ParsedEmployee = {
 interface EmployeePreviewTableProps {
   data: ParsedEmployee[];
   onUpdateRow?: (index: number, data: ParsedEmployee) => void;
+  filterStatus?: 'All' | 'Valid' | 'Invalid' | 'Duplicate';
 }
 
-export default function EmployeePreviewTable({ data, onUpdateRow }: EmployeePreviewTableProps) {
+export default function EmployeePreviewTable({ data, onUpdateRow, filterStatus = 'All' }: EmployeePreviewTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -28,11 +29,13 @@ export default function EmployeePreviewTable({ data, onUpdateRow }: EmployeePrev
 
   const dataWithOriginalIndex = data.map((d, i) => ({ ...d, originalIndex: i }));
 
-  const filteredData = dataWithOriginalIndex.filter(emp => 
-    Object.values(emp).some(val => 
+  const filteredData = dataWithOriginalIndex.filter(emp => {
+    const matchesSearch = Object.values(emp).some(val => 
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+    );
+    const matchesFilter = filterStatus === 'All' || emp.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(
