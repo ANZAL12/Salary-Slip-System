@@ -92,7 +92,7 @@ export default function UploadSalaryPage() {
 
       const hasErrors = validatedRecords.some(d => d.status !== 'Valid');
       if (hasErrors) {
-        setMessage({ type: 'error', text: 'Validation failed. Please review the errors in the table.' });
+        setMessage({ type: 'error', text: 'Validation failed. Please review the errors or duplicates in the table.' });
       } else {
         setMessage({ type: 'success', text: 'Validation successful. All records are ready to save.' });
       }
@@ -102,6 +102,11 @@ export default function UploadSalaryPage() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleRemoveInvalidAndDuplicates = () => {
+    setParsedData(prev => prev.filter(d => d.status === 'Valid' || d.status === 'Under Review'));
+    setMessage({ type: 'success', text: 'Invalid and duplicate records removed. You can now save the remaining valid salary records.' });
   };
 
   const handleSave = async () => {
@@ -256,14 +261,26 @@ export default function UploadSalaryPage() {
                   {isProcessing ? 'Validating...' : 'Validate Data'}
                 </button>
               ) : (
-                <button 
-                  onClick={handleSave}
-                  disabled={!canSave || isSaving}
-                  className="flex-1 sm:flex-none flex items-center justify-center px-6 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors disabled:opacity-50"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isSaving ? 'Saving...' : 'Save Salary Data'}
-                </button>
+                <>
+                  {(duplicate > 0 || invalid > 0) && (
+                    <button 
+                      onClick={handleRemoveInvalidAndDuplicates}
+                      disabled={isSaving}
+                      className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 border border-orange-400 text-orange-600 rounded-lg text-sm font-medium hover:bg-orange-50 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove Invalid & Duplicates
+                    </button>
+                  )}
+                  <button 
+                    onClick={handleSave}
+                    disabled={!canSave || isSaving}
+                    className="flex-1 sm:flex-none flex items-center justify-center px-6 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {isSaving ? 'Saving...' : 'Save Salary Data'}
+                  </button>
+                </>
               )}
             </div>
           </div>

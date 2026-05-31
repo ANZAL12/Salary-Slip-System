@@ -117,9 +117,9 @@ export default function UploadEmployeesPage() {
     }
   };
 
-  const handleRemoveDuplicates = () => {
-    setParsedData(prev => prev.filter(d => d.status !== 'Duplicate'));
-    setMessage({ type: 'success', text: 'Duplicates removed. You can now save the remaining valid employees.' });
+  const handleRemoveInvalidAndDuplicates = () => {
+    setParsedData(prev => prev.filter(d => d.status === 'Valid' || d.status === 'Under Review'));
+    setMessage({ type: 'success', text: 'Invalid and duplicate records removed. You can now save the remaining valid employees.' });
   };
 
   const handleSave = async () => {
@@ -282,14 +282,14 @@ export default function UploadEmployeesPage() {
                 </button>
               ) : (
                 <>
-                  {duplicate > 0 && (
+                  {(duplicate > 0 || invalid > 0) && (
                     <button 
-                      onClick={handleRemoveDuplicates}
+                      onClick={handleRemoveInvalidAndDuplicates}
                       disabled={isSaving}
                       className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 border border-orange-400 text-orange-600 rounded-lg text-sm font-medium hover:bg-orange-50 transition-colors disabled:opacity-50"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Remove Duplicates
+                      Remove Invalid & Duplicates
                     </button>
                   )}
                   <button 
