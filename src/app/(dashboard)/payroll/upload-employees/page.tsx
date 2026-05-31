@@ -76,10 +76,8 @@ export default function UploadEmployeesPage() {
 
     const existingResult = await getEmployees();
     const existingIds = new Set(existingResult.data?.map(e => e.employee_id.toLowerCase()) || []);
-    const existingEmails = new Set(existingResult.data?.map(e => e.email.toLowerCase()) || []);
 
     const seenIds = new Set<string>();
-    const seenEmails = new Set<string>();
 
     const validatedData = parsedData.map(emp => {
       const errors: string[] = [];
@@ -97,15 +95,6 @@ export default function UploadEmployeesPage() {
           errors.push("Duplicate Employee ID in DB");
         }
         seenIds.add(emp.employee_id.toLowerCase());
-      }
-
-      if (emp.email) {
-        if (seenEmails.has(emp.email.toLowerCase())) {
-          errors.push("Duplicate Email in file");
-        } else if (existingEmails.has(emp.email.toLowerCase())) {
-          errors.push("Duplicate Email in DB");
-        }
-        seenEmails.add(emp.email.toLowerCase());
       }
 
       if (errors.length > 0) {
